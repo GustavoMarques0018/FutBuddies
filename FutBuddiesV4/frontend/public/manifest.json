@@ -1,0 +1,27 @@
+{
+  "short_name": "FutBuddies",
+  "name": "FutBuddies — Organiza jogos de futebol",
+  "description": "A plataforma que une jogadores de futebol, organiza jogos publicos e privados, forma equipas e conecta a comunidade.",
+  "icons": [
+    {
+      "src": "logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "FbVerde.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#39FF14",
+  "background_color": "#0a0a0a",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "pt-PT",
+  "categories": ["sports", "social"]
+}

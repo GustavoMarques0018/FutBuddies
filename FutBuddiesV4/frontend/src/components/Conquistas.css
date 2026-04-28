@@ -1,0 +1,124 @@
+.conquistas { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.conquistas-header {
+  display: flex; flex-direction: column; gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.conquistas-progresso { display: flex; flex-direction: column; gap: 0.5rem; }
+.conquistas-progresso-bar {
+  width: 100%; height: 12px;
+  background: var(--bg-elev-1);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.conquistas-progresso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f4c430, #a855f7);
+  transition: width 600ms var(--ease-out);
+}
+.conquistas-progresso-texto { font-size: 0.9rem; color: var(--text-secondary); }
+.conquistas-progresso-texto strong { color: var(--text); font-size: 1.05rem; }
+
+.conquistas-filtros { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.conquistas-filtro {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.conquistas-filtro:hover { color: var(--text); border-color: var(--primary); }
+.conquistas-filtro.ativo {
+  background: var(--primary);
+  color: var(--bg-elev-0, #000);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.conquistas-seccao { display: flex; flex-direction: column; gap: 0.75rem; }
+.conquistas-categoria {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.conquistas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.conquista-card {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.9rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--tier-cor);
+  border-radius: var(--radius);
+  transition: all var(--t-fast) var(--ease-out);
+}
+.conquista-card.desbloqueada {
+  box-shadow: 0 0 0 1px var(--tier-cor), 0 4px 16px rgba(0,0,0,0.15);
+}
+.conquista-card.desbloqueada:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--tier-cor), 0 8px 24px rgba(0,0,0,0.25);
+}
+.conquista-card.bloqueada { opacity: 0.55; filter: grayscale(0.6); }
+
+.conquista-icone {
+  font-size: 2rem; line-height: 1;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elev-1);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.conquista-card.desbloqueada .conquista-icone {
+  animation: conquista-pulse 2.5s var(--ease-out) infinite;
+}
+
+.conquista-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.conquista-nome { font-weight: 600; font-size: 0.95rem; }
+.conquista-descricao { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+.conquista-data {
+  font-size: 0.7rem; color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.conquista-tier {
+  position: absolute; top: 0.5rem; right: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.conquista-card.bloqueada .conquista-tier { background: var(--bg-elev-1) !important; color: var(--text-muted); }
+
+@keyframes conquista-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conquista-card.desbloqueada .conquista-icone { animation: none; }
+}
+
+@media (max-width: 480px) {
+  .conquistas-grid { grid-template-columns: 1fr; }
+}

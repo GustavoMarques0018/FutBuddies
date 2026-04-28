@@ -1,0 +1,89 @@
+/* ============================================================
+   Toasts v6
+   ============================================================ */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 280px;
+  max-width: 380px;
+  pointer-events: all;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.35s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.toast-success { border-color: rgba(57,255,20,0.4); }
+.toast-success::before { background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+.toast-success .toast-icon { color: var(--primary); }
+
+.toast-error { border-color: rgba(255,77,109,0.4); }
+.toast-error::before { background: var(--danger); }
+.toast-error .toast-icon { color: var(--danger); }
+
+.toast-info { border-color: rgba(77,208,255,0.4); }
+.toast-info::before { background: var(--info); }
+.toast-info .toast-icon { color: var(--info); }
+
+.toast-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  width: 22px;
+  text-align: center;
+}
+
+.toast-msg { flex: 1; line-height: 1.4; color: var(--text); }
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--t-fast) var(--ease);
+  border-radius: 4px;
+}
+.toast-close:hover { color: var(--text); background: var(--bg-hover); }
+
+@media (max-width: 480px) {
+  .toast-container {
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  }
+  .toast { min-width: unset; max-width: unset; font-size: 0.8rem; }
+}

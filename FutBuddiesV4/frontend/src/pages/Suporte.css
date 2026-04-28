@@ -1,0 +1,143 @@
+/* ============================================================
+   FutBuddies - Suporte
+   ============================================================ */
+.suporte-page {
+  padding: 0 0 4rem;
+  background: var(--bg);
+}
+.suporte-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.suporte-header h1 {
+  font-size: 2.2rem;
+  margin: 0 0 .4rem;
+  color: var(--text);
+}
+.suporte-header p { color: var(--text-secondary); margin: 0; }
+
+.suporte-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+.suporte-card h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+.suporte-card p { color: var(--text-secondary); margin: 0 0 1rem; line-height: 1.5; }
+.suporte-card .tiny { color: var(--text-muted); font-size: .85rem; }
+
+/* Card Contacto principal */
+.suporte-contacto {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elev-2));
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-soft), 0 4px 24px var(--primary-glow);
+}
+.suporte-contacto-texto { flex: 1; }
+.suporte-icon { font-size: 4.5rem; line-height: 1; opacity: .9; }
+.suporte-email {
+  display: inline-block;
+  font-family: var(--font-mono, ui-monospace, 'Fira Code', monospace);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: .6rem 1rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  margin: .5rem 0 1rem;
+  word-break: break-all;
+}
+.suporte-email:hover { background: var(--primary-glow); }
+.suporte-contacto-acoes { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* Formulário */
+.suporte-form { display: grid; gap: 1rem; }
+.suporte-form label {
+  display: flex; flex-direction: column; gap: .35rem;
+  color: var(--text-secondary); font-size: .88rem; font-weight: 600;
+}
+.suporte-form input,
+.suporte-form textarea {
+  padding: .7rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  background: var(--bg-input);
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
+}
+.suporte-form input:focus,
+.suporte-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.suporte-form textarea { resize: vertical; min-height: 120px; }
+.suporte-form .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .suporte-form .row-2 { grid-template-columns: 1fr; } }
+
+.suporte-sucesso {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: .85rem 1rem;
+  margin-bottom: 1rem;
+  font-size: .95rem;
+}
+
+/* FAQ */
+.faq-list { display: grid; gap: .5rem; }
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-elev-2);
+  transition: border-color .15s;
+}
+.faq-item.open { border-color: var(--primary); }
+.faq-q {
+  width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.1rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: .98rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.faq-q:hover { background: var(--bg-hover); }
+.faq-chevron {
+  width: 24px; height: 24px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.1rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.faq-a {
+  padding: 0 1.1rem 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: .92rem;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .suporte-contacto { flex-direction: column; text-align: center; }
+  .suporte-icon { font-size: 3.5rem; }
+  .suporte-header h1 { font-size: 1.7rem; }
+}

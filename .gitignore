@@ -1,0 +1,15 @@
+# Dependências - Pastas pesadas que o comando 'npm install' recria
+node_modules/
+
+# Segurança - Onde estão as tuas chaves do Stripe e passwords
+.env
+.env.local
+.env.production
+.claude/
+.vscode/
+
+# Executáveis e Builds
+*.exe
+stripe.exe
+dist/
+build/

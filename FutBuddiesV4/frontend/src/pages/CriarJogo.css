@@ -1,0 +1,122 @@
+/* ============================================================
+   Criar Jogo / Criar Equipa v6 (form pages)
+   ============================================================ */
+
+.criar-jogo-page, .criar-equipa-page { padding-bottom: 4rem; }
+
+.criar-form-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.criar-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.4s var(--ease-out);
+}
+.criar-form-header h1 {
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  margin-bottom: 0.4rem;
+}
+.criar-form-header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+.criar-form {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.criar-form::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(57,255,20,0.4), transparent 50%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.criar-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.criar-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.criar-form .full { grid-column: 1 / -1; }
+
+.criar-form-actions {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--border);
+}
+.criar-form-actions .btn { flex: 1; }
+
+.criar-toggle-vis {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.criar-toggle-vis button {
+  flex: 1;
+  padding: 0.85rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--t) var(--ease);
+}
+.criar-toggle-vis button.ativo {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.criar-erro {
+  background: rgba(255,77,109,0.1);
+  border: 1px solid rgba(255,77,109,0.3);
+  color: var(--danger);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .criar-form { padding: 1.5rem 1.25rem; }
+  .criar-form-row { grid-template-columns: 1fr; }
+  .criar-form-actions { flex-direction: column-reverse; }
+}
+@media (max-width: 480px) {
+  .criar-form { padding: 1.15rem 1rem; border-radius: var(--radius-lg); }
+  .criar-form-header h1 { font-size: 1.5rem; }
+  .criar-form-header p { font-size: 0.85rem; }
+  .criar-form label { font-size: 0.72rem; }
+  .criar-toggle-vis button { padding: 0.7rem 0.5rem; font-size: 0.78rem; }
+  .criar-form-actions .btn { padding: 0.75rem; font-size: 0.85rem; }
+}

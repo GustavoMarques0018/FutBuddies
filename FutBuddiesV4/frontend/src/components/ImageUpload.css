@@ -1,0 +1,54 @@
+/* ── ImageUpload ── */
+.img-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.img-upload-preview {
+  position: relative;
+  border: 2px dashed var(--border);
+  background: var(--bg-input);
+  overflow: hidden;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.img-upload-preview:hover {
+  border-color: var(--primary);
+}
+
+.img-upload-preview:hover .img-upload-overlay {
+  opacity: 1;
+}
+
+.img-upload-loading {
+  opacity: 0.5;
+  cursor: wait !important;
+}
+
+.img-upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--bg-input);
+}
+
+.img-upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 0.8rem;
+}

@@ -1,0 +1,139 @@
+.dono-dash { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.dono-dash-loading { display: flex; flex-direction: column; gap: 1rem; }
+
+.dono-dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.dono-kpi {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.dono-kpi:hover { transform: translateY(-2px); }
+.dono-kpi.accent { border-color: var(--primary); }
+.dono-kpi.accent .dono-kpi-value { color: var(--primary); }
+.dono-kpi.warn { border-color: var(--danger); }
+.dono-kpi.warn .dono-kpi-value { color: var(--danger); }
+
+.dono-kpi-icone {
+  font-size: 1.6rem;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elev-1);
+  border-radius: var(--radius-sm);
+}
+.dono-kpi-info { display: flex; flex-direction: column; min-width: 0; }
+.dono-kpi-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.dono-kpi-value { font-size: 1.3rem; font-weight: 700; font-family: var(--font-display); }
+
+.dono-dash-card {
+  padding: 1.25rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.dono-dash-card h3 { margin: 0 0 0.25rem; font-family: var(--font-display); font-size: 1.1rem; }
+.dono-dash-card p { margin: 0 0 1rem; }
+
+/* ── Heatmap ─────────────────────────── */
+.dono-heatmap {
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+.dono-heatmap-hours, .dono-heatmap-row {
+  display: grid;
+  grid-template-columns: 50px repeat(24, minmax(28px, 1fr));
+  gap: 2px;
+}
+.dono-heatmap-corner { }
+.dono-heatmap-hour-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.dono-heatmap-day-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex; align-items: center;
+  padding-right: 0.5rem;
+}
+.dono-heatmap-cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.dono-heatmap-cell:hover { transform: scale(1.15); outline: 1px solid var(--primary); z-index: 1; }
+
+.dono-heatmap-legend {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+}
+.dono-heatmap-legend-bar {
+  flex: 1; max-width: 200px; height: 10px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg,
+    var(--bg-elev-1),
+    rgba(57,255,20,0.15),
+    rgba(57,255,20,0.85));
+}
+
+/* ── Top horários ───────────────────── */
+.dono-top-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.dono-top-list li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-elev-1);
+  border-radius: var(--radius-sm);
+}
+.dono-top-rank {
+  font-weight: 700;
+  color: var(--primary);
+  font-family: var(--font-display);
+}
+.dono-top-count { color: var(--text-muted); font-size: 0.85rem; }
+
+/* ── Receita mensal ─────────────────── */
+.dono-mensal {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.75rem;
+  height: 200px;
+  align-items: end;
+}
+.dono-mensal-bar {
+  display: flex; flex-direction: column; align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+.dono-mensal-fill {
+  width: 100%;
+  max-width: 60px;
+  background: linear-gradient(180deg, var(--primary), rgba(57,255,20,0.3));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-height: 4px;
+  transition: height 600ms var(--ease-out);
+}
+.dono-mensal-label { font-size: 0.75rem; color: var(--text-muted); }
+.dono-mensal-valor { font-size: 0.7rem; font-weight: 600; }

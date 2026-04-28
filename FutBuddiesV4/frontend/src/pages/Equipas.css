@@ -1,0 +1,141 @@
+/* ============================================================
+   Equipas v6
+   ============================================================ */
+
+.equipas-page { padding-bottom: 4rem; }
+
+.equipas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.4s var(--ease-out);
+}
+.equipas-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 0.35rem;
+}
+.equipas-header h1::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  margin-top: 0.5rem;
+  border-radius: 2px;
+}
+.equipas-header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+.equipas-filtros {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: center;
+}
+.equipas-filtros input { flex: 1; min-width: 200px; }
+.equipas-filtros select { min-width: 160px; flex: 0 1 auto; }
+.equipas-filtros label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+.equipas-filtros input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+.equipas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.25rem;
+}
+
+.equipa-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: var(--text);
+  padding: 1.5rem;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all var(--t) var(--ease);
+  animation: fadeInUp 0.4s var(--ease-out) both;
+}
+.equipa-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow-strong);
+}
+
+.equipa-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.equipa-emblema {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.equipa-emblema img { width: 100%; height: 100%; object-fit: cover; }
+
+.equipa-nome {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: 0;
+}
+.equipa-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.equipa-info {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.8rem;
+}
+.equipa-info-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.equipa-info-label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.equipa-info-value { color: var(--text); font-weight: 600; font-family: var(--font-display); }
+
+@media (max-width: 768px) {
+  .equipas-grid { grid-template-columns: 1fr; }
+  .equipas-filtros { flex-direction: column; align-items: stretch; }
+  .equipas-filtros input, .equipas-filtros select { width: 100%; min-width: 0; }
+}
+@media (max-width: 480px) {
+  .equipa-card { padding: 1rem; }
+  .equipa-nome { font-size: 1rem; }
+  .equipa-emblema { width: 42px; height: 42px; font-size: 1.4rem; }
+  .equipa-info { font-size: 0.75rem; }
+}

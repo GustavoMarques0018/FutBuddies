@@ -1,0 +1,280 @@
+/* ============================================================
+   Auth — Login / Registar
+   ============================================================ */
+
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: calc(var(--navbar-h) + env(safe-area-inset-top, 0px) + 2rem) 1rem 2rem;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* Background photo (image set via inline style in JSX) */
+.auth-bg-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Background video (loop, muted, autoplay) */
+.auth-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  filter: saturate(1.05) contrast(1.02);
+  /* Se o browser bloquear autoplay (iOS Low Power Mode), o poster mantém-se visível */
+  background: #000 center/cover no-repeat;
+}
+/* Em écrans muito pequenos, object-fit: cover com vídeos verticais pode ficar esticado.
+   Mantemos cover (é o que queremos), mas garantimos que o poster aparece mesmo
+   sem play (Safari iOS por vezes esconde o poster se o video falha silenciosamente). */
+@supports (-webkit-touch-callout: none) {
+  .auth-bg-video { background-size: cover; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-bg-video { display: none; }
+}
+/* Dark overlay on top of photo/video */
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(5,5,5,0.72), rgba(5,5,5,0.86));
+  pointer-events: none;
+}
+[data-theme="light"] .auth-page::before {
+  background: linear-gradient(180deg, rgba(246,247,245,0.70), rgba(246,247,245,0.88));
+}
+/* Green glow accent (above overlay, still behind form) */
+.auth-page::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-glow), transparent 65%);
+  filter: blur(80px);
+  opacity: 0.4;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+/* Form stays on top of everything */
+.auth-container { position: relative; z-index: 2; }
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2.25rem;
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.4s var(--ease-out);
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(57,255,20,0.5), transparent 50%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.auth-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.75rem;
+}
+.auth-logo img { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(57,255,20,0.5)); }
+.auth-logo span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, var(--text), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.auth-card h2 {
+  text-align: center;
+  font-size: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+.auth-card-sub {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  margin: 0.25rem 0 0.25rem;
+}
+.auth-remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0;
+}
+.auth-remember:hover { color: var(--text); }
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.auth-form .btn {
+  margin-top: 0.5rem;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+  width: 100%;
+  justify-content: center;
+}
+.auth-form .btn .spinner {
+  border-top-color: #050505;
+  border-right-color: transparent;
+}
+
+/* Neutralizar autofill do Chrome que quebra o contraste do formulário */
+.auth-form input:-webkit-autofill,
+.auth-form input:-webkit-autofill:hover,
+.auth-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset;
+  caret-color: var(--text);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.auth-erro {
+  background: rgba(255,77,109,0.1);
+  border: 1px solid rgba(255,77,109,0.3);
+  color: var(--danger);
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.auth-rodape {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.auth-rodape a {
+  color: var(--primary);
+  font-weight: 600;
+  margin-left: 0.3rem;
+}
+.auth-rodape a:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .auth-card { padding: 1.85rem 1.4rem; border-radius: var(--radius-lg); }
+}
+
+/* ── Atalhos DEV (login rápido para testes) ─────────────── */
+.auth-dev-shortcuts {
+  margin-top: 1.25rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  border: 1px dashed rgba(255, 200, 0, 0.45);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(255,200,0,0.06), rgba(255,200,0,0.02));
+}
+.auth-dev-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffc800;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-display, inherit);
+}
+.auth-dev-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffc800;
+  box-shadow: 0 0 10px #ffc800;
+  animation: pulse 1.6s infinite;
+}
+.auth-dev-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.auth-dev-btn {
+  flex: 1 1 0;
+  min-width: 90px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hover);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease);
+}
+.auth-dev-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+  background: var(--bg-elev-3);
+}
+.auth-dev-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Cor de acento por tipo de conta */
+.auth-dev-admin  { border-color: rgba(255, 77, 109, 0.55); color: #ff8da0; }
+.auth-dev-admin:hover:not(:disabled)  { border-color: #ff4d6d; background: rgba(255,77,109,0.08); }
+.auth-dev-dono   { border-color: rgba(57, 255, 20, 0.55); color: var(--primary); }
+.auth-dev-dono:hover:not(:disabled)   { border-color: var(--primary); background: var(--primary-soft); }
+.auth-dev-user   { border-color: rgba(120, 180, 255, 0.55); color: #9bc7ff; }
+.auth-dev-user:hover:not(:disabled)   { border-color: #6aa8ff; background: rgba(120,180,255,0.08); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}

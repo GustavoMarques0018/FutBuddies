@@ -1,0 +1,31 @@
+.scroll-top-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 90;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #050505;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(57,255,20,0.35);
+  border: none;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  animation: fadeInUp 0.3s var(--ease-out);
+}
+.scroll-top-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 14px 32px rgba(57,255,20,0.5);
+}
+@media (max-width: 640px) {
+  .scroll-top-btn {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+}

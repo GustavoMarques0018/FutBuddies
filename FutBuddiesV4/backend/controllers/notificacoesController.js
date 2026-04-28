@@ -1,0 +1,153 @@
+// ============================================================
+//  FutBuddies - Controlador de Notificações
+// ============================================================
+
+const { query } = require('../config/database');
+
+// GET /api/notificacoes
+// Lista as notificações do utilizador atual (não expiradas), mais recentes primeiro
+async function listarNotificacoes(req, res) {
+  try {
+    const utilizadorId = req.utilizador.id;
+    const { apenas_nao_lidas } = req.query;
+
+    let where = 'WHERE n.utilizador_id = @uid AND (n.expira_em IS NULL OR n.expira_em > GETUTCDATE())';
+    if (apenas_nao_lidas === 'true') where += ' AND n.lida = 0';
+
+    const resultado = await query(
+      `SELECT TOP 50 n.id, n.tipo, n.titulo, n.mensagem, n.jogo_id, n.equipa_id,
+                     n.acao_url, n.lida, n.respondida, n.created_at, n.expira_em,
+                     j.titulo AS jogo_titulo,
+                     e.nome AS equipa_nome, e.emblema AS equipa_emblema
+         FROM notificacoes n
+         LEFT JOIN jogos  j ON j.id = n.jogo_id
+         LEFT JOIN equipas e ON e.id = n.equipa_id
+         ${where}
+         ORDER BY n.created_at DESC`,
+      { uid: utilizadorId }
+    );
+
+    res.json({ sucesso: true, notificacoes: resultado.recordset });
+  } catch (err) {
+    console.error('[Notif] Erro listar:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro ao carregar notificações.' });
+  }
+}
+
+// GET /api/notificacoes/nao-lidas-count
+// Devolve apenas o contador — chamado com frequência (polling na navbar)
+async function contarNaoLidas(req, res) {
+  try {
+    const utilizadorId = req.utilizador.id;
+    const r = await query(
+      `SELECT COUNT(*) AS total FROM notificacoes
+         WHERE utilizador_id = @uid AND lida = 0
+           AND (expira_em IS NULL OR expira_em > GETUTCDATE())`,
+      { uid: utilizadorId }
+    );
+    res.json({ sucesso: true, total: r.recordset[0].total });
+  } catch (err) {
+    console.error('[Notif] Erro contar:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro.' });
+  }
+}
+
+// PUT /api/notificacoes/:id/lida
+async function marcarLida(req, res) {
+  try {
+    const { id } = req.params;
+    const utilizadorId = req.utilizador.id;
+    const r = await query(
+      `UPDATE notificacoes SET lida = 1
+         WHERE id = @id AND utilizador_id = @uid`,
+      { id: parseInt(id), uid: utilizadorId }
+    );
+    if (r.rowsAffected[0] === 0)
+      return res.status(404).json({ sucesso: false, mensagem: 'Notificação não encontrada.' });
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error('[Notif] Erro marcarLida:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro.' });
+  }
+}
+
+// PUT /api/notificacoes/lidas
+// Marca TODAS do utilizador como lidas
+async function marcarTodasLidas(req, res) {
+  try {
+    const utilizadorId = req.utilizador.id;
+    await query(
+      `UPDATE notificacoes SET lida = 1 WHERE utilizador_id = @uid AND lida = 0`,
+      { uid: utilizadorId }
+    );
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error('[Notif] Erro marcarTodasLidas:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro.' });
+  }
+}
+
+// DELETE /api/notificacoes/:id
+async function eliminarNotificacao(req, res) {
+  try {
+    const { id } = req.params;
+    const utilizadorId = req.utilizador.id;
+    const r = await query(
+      `DELETE FROM notificacoes WHERE id = @id AND utilizador_id = @uid`,
+      { id: parseInt(id), uid: utilizadorId }
+    );
+    if (r.rowsAffected[0] === 0)
+      return res.status(404).json({ sucesso: false, mensagem: 'Notificação não encontrada.' });
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error('[Notif] Erro eliminar:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro.' });
+  }
+}
+
+// ── Helpers internos (usados por outros controllers / scheduler) ──
+
+/**
+ * Cria uma notificação para um utilizador específico.
+ * Usa-se em: broadcasts do admin, gerador pós-jogo (Fase C), eventos de sistema.
+ */
+async function criarNotificacao({ utilizadorId, tipo, titulo, mensagem = null,
+                                   jogoId = null, equipaId = null, acaoUrl = null,
+                                   expiraEm = null }) {
+  await query(
+    `INSERT INTO notificacoes (utilizador_id, tipo, titulo, mensagem, jogo_id, equipa_id, acao_url, expira_em)
+       VALUES (@uid, @tipo, @titulo, @msg, @jid, @eid, @url, @exp)`,
+    {
+      uid: utilizadorId, tipo, titulo, msg: mensagem,
+      jid: jogoId, eid: equipaId, url: acaoUrl, exp: expiraEm,
+    }
+  );
+  // Envia também web push (best-effort, não bloqueia)
+  try {
+    const { enviarPush } = require('./webPushController');
+    enviarPush(utilizadorId, {
+      titulo, corpo: mensagem || '',
+      url: acaoUrl || '/notificacoes',
+    }).catch(() => {});
+  } catch { /* push controller pode não estar carregado */ }
+}
+
+/**
+ * Cria a mesma notificação para uma lista de utilizadores (batch broadcast).
+ */
+async function criarNotificacaoBroadcast({ utilizadorIds, tipo, titulo,
+                                            mensagem = null, acaoUrl = null,
+                                            expiraEm = null }) {
+  if (!utilizadorIds?.length) return;
+  // SQL Server não tem array nativo — inserimos um a um. Para escalas maiores
+  // trocar para tabela temporária + INSERT ... SELECT. OK para <1000 users.
+  for (const uid of utilizadorIds) {
+    await criarNotificacao({ utilizadorId: uid, tipo, titulo, mensagem, acaoUrl, expiraEm });
+  }
+}
+
+module.exports = {
+  listarNotificacoes, contarNaoLidas, marcarLida, marcarTodasLidas, eliminarNotificacao,
+  // helpers
+  criarNotificacao, criarNotificacaoBroadcast,
+};

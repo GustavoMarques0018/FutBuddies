@@ -1,0 +1,209 @@
+/* ============================================================
+   Sobre v6
+   ============================================================ */
+
+.sobre-page { padding-bottom: 5rem; }
+
+.sobre-hero {
+  text-align: center;
+  padding: 3rem 1rem 4rem;
+  position: relative;
+}
+.sobre-hero::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-glow), transparent 65%);
+  filter: blur(80px);
+  opacity: 0.4;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.sobre-hero-logo {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 1.5rem;
+  filter: drop-shadow(0 0 16px rgba(57,255,20,0.5));
+  position: relative;
+}
+.sobre-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  margin-bottom: 1rem;
+  position: relative;
+}
+.sobre-hero-desc {
+  font-size: 1.1rem;
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.sobre-section {
+  padding: 3rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.sobre-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.sobre-section-num {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border: 1px solid rgba(57,255,20,0.3);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-sm);
+}
+.sobre-section h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0;
+}
+
+.sobre-section-content { color: var(--text-secondary); font-size: 1rem; line-height: 1.7; }
+.sobre-section-content p { margin-bottom: 1rem; }
+
+/* Timeline (NEW) */
+.sobre-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-left: 1.5rem;
+  border-left: 2px dashed var(--border);
+  margin-top: 1.5rem;
+}
+.sobre-timeline-item {
+  position: relative;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  transition: all var(--t) var(--ease);
+}
+.sobre-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.1rem;
+  top: 1.4rem;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 8px var(--primary);
+}
+.sobre-timeline-item:hover { border-color: var(--primary); transform: translateX(4px); }
+.sobre-timeline-date {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.sobre-timeline-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+/* FAQ accordion (NEW) */
+.sobre-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.sobre-faq-item {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all var(--t) var(--ease);
+}
+.sobre-faq-item:hover { border-color: var(--border-hover); }
+.sobre-faq-item.aberto { border-color: var(--primary); box-shadow: var(--shadow-glow); }
+
+.sobre-faq-q {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text);
+}
+.sobre-faq-icon {
+  font-size: 1.4rem;
+  color: var(--primary);
+  font-weight: 300;
+  transition: transform var(--t) var(--ease);
+  flex-shrink: 0;
+}
+.sobre-faq-item.aberto .sobre-faq-icon { transform: rotate(45deg); }
+
+.sobre-faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--t-slow) var(--ease), padding var(--t-slow) var(--ease);
+  padding: 0 1.4rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.sobre-faq-item.aberto .sobre-faq-a {
+  max-height: 300px;
+  padding: 0 1.4rem 1.25rem;
+}
+
+.sobre-cta {
+  text-align: center;
+  padding: 3rem 2rem;
+  margin-top: 3rem;
+  background:
+    radial-gradient(ellipse at center, var(--primary-soft), transparent 70%),
+    var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+.sobre-cta h2 { margin-bottom: 0.75rem; font-size: 1.8rem; }
+.sobre-cta p { margin-bottom: 1.5rem; }
+
+@media (max-width: 768px) {
+  .sobre-hero { padding: 2rem 0.5rem 2.5rem; }
+  .sobre-hero::before { width: 300px; height: 300px; }
+  .sobre-hero-logo { width: 70px; height: 70px; margin-bottom: 1rem; }
+  .sobre-hero-desc { font-size: 0.95rem; }
+  .sobre-section { padding: 2rem 0; }
+  .sobre-section-header { gap: 0.75rem; margin-bottom: 1rem; }
+  .sobre-section-num { font-size: 1.1rem; }
+  .sobre-timeline { padding-left: 1.2rem; gap: 1rem; }
+  .sobre-timeline-item { padding: 1rem 1.1rem; }
+  .sobre-timeline-item::before { left: -1.8rem; width: 12px; height: 12px; }
+  .sobre-faq-q { padding: 0.9rem 1rem; font-size: 0.9rem; }
+  .sobre-faq-a { padding: 0 1rem; font-size: 0.85rem; }
+  .sobre-faq-item.aberto .sobre-faq-a { padding: 0 1rem 1rem; }
+  .sobre-cta { padding: 2rem 1.25rem; margin-top: 2rem; }
+  .sobre-cta h2 { font-size: 1.4rem; }
+}
+@media (max-width: 480px) {
+  .sobre-hero-logo { width: 56px; height: 56px; }
+  .sobre-section-header { flex-direction: column; gap: 0.4rem; }
+  .sobre-timeline-title { font-size: 0.95rem; }
+  .sobre-cta h2 { font-size: 1.2rem; }
+}

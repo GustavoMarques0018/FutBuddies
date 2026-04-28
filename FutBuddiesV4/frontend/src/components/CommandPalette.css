@@ -1,0 +1,178 @@
+/* ============================================================
+   Command Palette — Cmd/Ctrl + K
+   ============================================================ */
+
+.cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 1rem 1rem;
+  animation: fadeIn 0.18s var(--ease);
+}
+
+.cmdk-panel {
+  width: 100%;
+  max-width: 620px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  overflow: hidden;
+  animation: scaleIn 0.22s var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+
+.cmdk-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cmdk-search-icon {
+  font-size: 1.4rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.cmdk-input {
+  flex: 1;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 1.05rem;
+  color: var(--text);
+  box-shadow: none !important;
+}
+.cmdk-input:focus { box-shadow: none !important; }
+
+.cmdk-esc {
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-elev-3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.cmdk-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.cmdk-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.75rem 0.85rem 0.4rem;
+}
+
+.cmdk-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.cmdk-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-secondary);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.cmdk-item.active,
+.cmdk-item:hover {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+.cmdk-item-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  width: 26px;
+  text-align: center;
+}
+
+.cmdk-item-label {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmdk-item-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cmdk-item.active .cmdk-item-hint { color: var(--primary); }
+
+.cmdk-footer {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.7rem 1.3rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.cmdk-footer kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  margin-right: 0.25rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .cmdk-overlay { padding-top: 6vh; }
+  .cmdk-footer { gap: 0.75rem; flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .cmdk-overlay { padding: calc(env(safe-area-inset-top, 0px) + 1.5rem) 0.65rem 1rem; }
+  .cmdk-panel { max-height: 80vh; border-radius: var(--radius); }
+  .cmdk-input-wrap { padding: 0.85rem 1rem; gap: 0.6rem; }
+  .cmdk-input { font-size: 0.95rem; }
+  .cmdk-item { padding: 0.6rem 0.7rem; gap: 0.6rem; }
+  .cmdk-item-label { font-size: 0.85rem; }
+  .cmdk-footer { padding: 0.55rem 0.85rem; font-size: 0.65rem; }
+  .cmdk-footer kbd { font-size: 0.6rem; padding: 0.05rem 0.3rem; }
+}

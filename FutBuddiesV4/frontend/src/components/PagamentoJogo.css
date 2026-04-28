@@ -1,0 +1,112 @@
+/* ============================================================
+   FutBuddies - Pagamento Jogo (theme-aware)
+   ============================================================ */
+.pagamento-card {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.pag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.pag-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+/* Progress bar */
+.pag-bar-wrap { display: grid; gap: .4rem; }
+.pag-bar {
+  height: 10px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pag-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #4ade80);
+  transition: width .4s ease;
+}
+.pag-bar-info {
+  font-size: .9rem;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.pag-bar-info .tiny { color: var(--text-muted); font-size: .82rem; }
+
+.deadline {
+  color: var(--warning);
+  background: rgba(255, 176, 32, .1);
+  border: 1px solid rgba(255, 176, 32, .3);
+  border-radius: var(--radius-sm);
+  padding: .5rem .75rem;
+  font-size: .9rem;
+  margin: 0;
+}
+
+.pag-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* Badges */
+.badge {
+  padding: .3rem .7rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  background: var(--bg-elev-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+.badge.confirmada,
+.badge.ok {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.badge.pendente {
+  background: rgba(255, 176, 32, .12);
+  color: var(--warning);
+  border-color: rgba(255, 176, 32, .4);
+}
+.badge.expirada,
+.badge.cancelada,
+.badge.reembolsada {
+  background: rgba(255, 77, 109, .12);
+  color: var(--danger);
+  border-color: rgba(255, 77, 109, .4);
+}
+
+/* Stripe form */
+.modal-body { padding: 1.25rem; color: var(--text); }
+.stripe-form { display: grid; gap: 1rem; }
+.stripe-form .erro {
+  color: var(--danger);
+  background: rgba(255, 77, 109, .12);
+  border: 1px solid rgba(255, 77, 109, .4);
+  padding: .6rem .75rem;
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+}
+.stripe-form .info {
+  color: var(--text-secondary);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  padding: .6rem .75rem;
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+}

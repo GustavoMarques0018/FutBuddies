@@ -1,0 +1,140 @@
+/* ============================================================
+   Reportar Jogo — Fase C
+   ============================================================ */
+
+.reportar-page {
+  min-height: calc(100vh - var(--navbar-h));
+  min-height: calc(100dvh - var(--navbar-h));
+  padding: 2rem 0 4rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reportar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.reportar-header .btn { align-self: flex-start; }
+.reportar-titulo {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  margin: 0.5rem 0 0;
+  color: var(--text);
+}
+.reportar-subtitulo {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.reportar-aviso {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  background: rgba(255,176,32,0.12);
+  border: 1px solid rgba(255,176,32,0.35);
+  border-radius: var(--radius-sm);
+  color: #ffb020;
+  font-size: 0.85rem;
+}
+
+/* ── Placard ── */
+.reportar-placard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+.reportar-placard-lado { display: flex; flex-direction: column; gap: 0.35rem; align-items: center; }
+.reportar-lado-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.reportar-lado-golos {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+.reportar-lado-golos.vencedor {
+  color: var(--primary);
+  text-shadow: 0 0 20px var(--primary-glow);
+}
+.reportar-placard-vs {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--text-muted);
+}
+.reportar-placard-meta {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+}
+
+/* ── Grid de forms ── */
+.reportar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.reportar-seccao {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  margin: 0 0 0.35rem;
+  color: var(--text);
+}
+.reportar-ajuda {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.reportar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reportar-golos-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  justify-content: center;
+}
+.reportar-golos-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  max-width: 140px;
+}
+.reportar-golos-input label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.reportar-golos-input .input {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  padding: 0.5rem;
+}
+.reportar-golos-vs {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  padding-bottom: 0.75rem;
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="google" content="notranslate" />
+    <link rel="icon" type="image/png" href="%PUBLIC_URL%/logo-icon.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#39FF14" />
+    <meta name="description" content="FutBuddies — Organiza jogos de futebol com os teus amigos" />
+    <meta name="author" content="Gustavo Marques — Projeto PAP 2026" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FutBuddies" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/FbVerde.png" />
+    <!-- Google Fonts: Rajdhani + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <title>FutBuddies</title>
+  </head>
+  <body>
+    <noscript>Precisas de JavaScript para usar o FutBuddies.</noscript>
+    <!-- Splash screen apenas em modo PWA (standalone) -->
+    <style>
+      @keyframes splashSpin { to { transform: rotate(360deg); } }
+      @keyframes splashPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.7; transform:scale(0.95); } }
+    </style>
+    <script>
+      // Detectar se esta em modo standalone (PWA instalada no ecra inicial)
+      var isPWA = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+      if (isPWA) {
+        document.write(
+          '<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;">' +
+          '<img src="FbVerde.png" alt="" style="width:100px;height:100px;object-fit:contain;margin-bottom:1.5rem;animation:splashPulse 1.5s ease-in-out infinite;" />' +
+          '<p style="font-family:Rajdhani,sans-serif;font-size:1.6rem;font-weight:700;color:#fff;letter-spacing:-0.02em;margin:0;">Fut<span style=color:#39FF14>Buddies</span></p>' +
+          '<div style="margin-top:2rem;width:40px;height:40px;border:3px solid rgba(57,255,20,0.2);border-top-color:#39FF14;border-radius:50%;animation:splashSpin 0.8s linear infinite;"></div>' +
+          '</div>'
+        );
+        // Timeout de seguranca - manter splash visivel por pelo menos 2s
+        setTimeout(function() {
+          var s = document.getElementById('splash-screen');
+          if (s) { s.style.opacity = '0'; setTimeout(function() { s.remove(); }, 400); }
+        }, 8000);
+      }
+    </script>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+  </body>
+</html>
