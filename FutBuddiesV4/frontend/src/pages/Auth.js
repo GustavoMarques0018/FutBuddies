@@ -101,7 +101,10 @@ export function Login() {
     { rotulo: 'Dono · Cadera',   email: 'cadera@futbuddies.com',  password: '123456',    cor: 'dono'  },
     { rotulo: 'User · Gustavo',  email: 'gustavo@futbuddies.com', password: '123456',    cor: 'user' },
   ];
-  const isDev = process.env.NODE_ENV !== 'production';
+  // Mostra os atalhos sempre que NODE_ENV !== 'production', ou quando
+  // REACT_APP_SHOW_DEV_LOGINS=1 (útil para demo/PAP em produção).
+  const isDev = process.env.NODE_ENV !== 'production'
+    || process.env.REACT_APP_SHOW_DEV_LOGINS === '1';
 
   const devLogin = async (preset) => {
     setErro('');
