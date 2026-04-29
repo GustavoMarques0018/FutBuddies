@@ -4,11 +4,22 @@
 
 import axios from 'axios';
 
-// Em localhost usa localhost:5000, noutro dispositivo (ex: telefone) usa o IP do servidor
-const API_URL = process.env.REACT_APP_API_URL ||
-  (window.location.hostname === 'localhost'
-    ? 'http://localhost:5000/api'
-    : `http://${window.location.hostname}:5000/api`);
+// Em produção, REACT_APP_API_URL TEM de estar definido.
+// Em dev, se não definido, usa localhost:5000 (ou o hostname atual para acesso via telemóvel).
+const isLocalDev =
+  typeof window !== 'undefined' &&
+  /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\d+\.\d+\.\d+\.\d+)$/.test(window.location.hostname);
+
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  (isLocalDev
+    ? `http://${window.location.hostname}:5000/api`
+    : (() => {
+        // Falha ruidosamente em produção — não queremos requests para o domínio do frontend.
+        // eslint-disable-next-line no-console
+        console.error('[FutBuddies] REACT_APP_API_URL não definido em produção. Define-o no build.');
+        return '/api';
+      })());
 
 const api = axios.create({
   baseURL: API_URL,

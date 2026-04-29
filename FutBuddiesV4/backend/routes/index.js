@@ -189,8 +189,10 @@ router.get('/admin/suporte',             autenticar, isAdmin, suporteCtrl.listar
 router.get('/admin/suporte/stats',       autenticar, isAdmin, suporteCtrl.statsAdmin);
 router.put('/admin/suporte/:id',         autenticar, isAdmin, suporteCtrl.atualizarAdmin);
 
-// ── TESTE (apagar em produção) ────────────────────────────
-router.post('/test/create-session', testeCtrl.criarSessaoTeste);
+// ── TESTE (bloqueado em produção; em dev exige autenticação) ─
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/test/create-session', autenticar, isAdmin, testeCtrl.criarSessaoTeste);
+}
 
 // ── UPLOAD ────────────────────────────────────────────────
 router.post('/upload/imagem', autenticar, upload.single('imagem'), uploadImagem);

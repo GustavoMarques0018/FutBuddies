@@ -17,11 +17,43 @@ const path = require('path');
 const routes = require('./routes/index');
 const { iniciarScheduler } = require('./jobs/scheduler');
 
+// ── Validações de arranque (fail-fast) ────────────────────
+const isProd = process.env.NODE_ENV === 'production';
+
+if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+  console.error('❌ JWT_SECRET e JWT_REFRESH_SECRET são obrigatórios. Define-os no .env.');
+  process.exit(1);
+}
+if (isProd && (process.env.JWT_SECRET.length < 32 || process.env.JWT_REFRESH_SECRET.length < 32)) {
+  console.error('❌ Em produção JWT_SECRET/JWT_REFRESH_SECRET devem ter pelo menos 32 caracteres.');
+  process.exit(1);
+}
+if (isProd && !process.env.CORS_ORIGIN) {
+  console.error('❌ Em produção CORS_ORIGIN é obrigatório (lista separada por vírgulas).');
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 
+// ── CORS ──────────────────────────────────────────────────
+// Em dev: aceita qualquer origem se CORS_ORIGIN não estiver definido.
+// Em prod: lista estrita (separada por vírgulas).
+const corsAllowList = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+const corsOrigin = isProd
+  ? (origin, cb) => {
+      // Permite requests server-to-server / curl (sem origin)
+      if (!origin) return cb(null, true);
+      if (corsAllowList.includes(origin)) return cb(null, true);
+      return cb(new Error(`Origem não permitida pelo CORS: ${origin}`));
+    }
+  : (corsAllowList.length ? corsAllowList : true);
+
 // ── Socket.IO ─────────────────────────────────────────────
-const corsOrigin = process.env.CORS_ORIGIN || true; // true = aceitar qualquer origem em dev
 const io = new Server(server, {
   cors: {
     origin: corsOrigin,
@@ -413,3 +445,28 @@ async function iniciar() {
 }
 
 iniciar();
+
+// ── Graceful shutdown (Azure App Service envia SIGTERM) ───
+function shutdown(signal) {
+  console.log(`\n🛑 Recebido ${signal}. A encerrar servidor...`);
+  server.close(() => {
+    console.log('✅ Servidor encerrado.');
+    process.exit(0);
+  });
+  // Hard exit se não fechar em 10s
+  setTimeout(() => {
+    console.error('⚠️  Timeout no shutdown — a forçar saída.');
+    process.exit(1);
+  }, 10000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  // Em produção não faz sentido continuar com estado corrompido.
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+});

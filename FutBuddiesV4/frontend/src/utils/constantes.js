@@ -27,15 +27,18 @@ export const NIVEL_COR = {
 export const getRegiaoGuardada = () => localStorage.getItem('fb_regiao') || '';
 export const guardarRegiao = (r) => r ? localStorage.setItem('fb_regiao', r) : localStorage.removeItem('fb_regiao');
 
+const isLocalDev =
+  typeof window !== 'undefined' &&
+  /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\d+\.\d+\.\d+\.\d+)$/.test(window.location.hostname);
+
 const API_BASE = (process.env.REACT_APP_API_URL ||
-  (window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : `http://${window.location.hostname}:5000`))
-  .replace('/api', '');
+  (isLocalDev ? `http://${window.location.hostname}:5000/api` : '/api'))
+  .replace(/\/api\/?$/, '');
+
 export const resolverImgUrl = (url) => {
   if (!url) return null;
-  // Se a URL contém localhost mas estamos noutro host, re-escrever
-  if (url.includes('localhost') && window.location.hostname !== 'localhost') {
+  // Se a URL contém localhost mas não estamos em localhost, re-escrever para o API_BASE atual.
+  if (url.includes('localhost') && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     const path = url.replace(/^https?:\/\/[^/]+/, '');
     return API_BASE + path;
   }

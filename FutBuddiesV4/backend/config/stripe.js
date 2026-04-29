@@ -29,6 +29,10 @@ if (!SECRET_KEY) {
     console.log(`✅ Stripe configurado · modo=${isTest ? 'TEST' : 'LIVE'} · prefix=${prefix}... · comissão=${COMISSAO_PCT}%`);
   }
   if (!WEBHOOK_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ STRIPE_WEBHOOK_SECRET é obrigatório em produção quando STRIPE_SECRET_KEY está definido.');
+      process.exit(1);
+    }
     console.warn('⚠️  STRIPE_WEBHOOK_SECRET ausente — webhook não vai validar assinaturas.');
   }
 }

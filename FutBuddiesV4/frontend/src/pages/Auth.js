@@ -73,7 +73,7 @@ export function Login() {
     email: localStorage.getItem('fb_remember_email') || '',
     password: ''
   });
-  const [lembrar, setLembrar] = useState(localStorage.getItem('fb_remember_email') ? true : true);
+  const [lembrar, setLembrar] = useState(!!localStorage.getItem('fb_remember_email'));
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
 
