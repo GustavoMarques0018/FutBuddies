@@ -369,7 +369,7 @@ function CandidaturaModal({ onClose, onSaved, addToast }) {
               <div className="foto-previews">
                 {fotos.map((url, i) => (
                   <div key={i} className="foto-preview">
-                    <img src={url} alt="" />
+                    <img src={resolverImgUrl(url)} alt="" />
                     <button type="button" className="foto-rm" onClick={() => setFotos(f => f.filter((_, idx) => idx !== i))}>×</button>
                   </div>
                 ))}

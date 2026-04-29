@@ -38,7 +38,13 @@ async function uploadImagem(req, res) {
     if (!req.file)
       return res.status(400).json({ sucesso: false, mensagem: 'Nenhum ficheiro recebido.' });
 
-    const url = `/uploads/${req.file.filename}`;
+    // Em produção devolvemos URL absoluta (frontend está noutro domínio).
+    // Em dev mantemos relativa para o frontend conseguir reescrever via resolverImgUrl.
+    const baseUrl = process.env.PUBLIC_BASE_URL
+      || (process.env.NODE_ENV === 'production'
+          ? `${req.protocol}://${req.get('host')}`
+          : '');
+    const url = `${baseUrl}/uploads/${req.file.filename}`;
     res.json({ sucesso: true, url, mensagem: 'Imagem carregada com sucesso!' });
   } catch (err) {
     console.error('[Upload] Erro:', err);
