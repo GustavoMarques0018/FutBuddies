@@ -19,28 +19,5 @@ O **FutBuddies** é uma plataforma focada na experiência do jogador. O objetivo
 * **Base de Dados:** SQL Server (MSSQL) para gestão robusta de dados.
 * **Pagamentos:** Stripe Connect.
 
-## 🚀 Como colocar a App a correr
-
-Para testares a app localmente, precisas de configurar as chaves de API num ficheiro `.env` na pasta do servidor:
-
-1.  **Clone o projeto:**
-    ```bash
-    git clone [https://github.com/GustavoMarques0018/FutBuddies.git](https://github.com/GustavoMarques0018/FutBuddies.git)
-    ```
-2.  **Variáveis de Ambiente (.env):**
-    ```env
-    STRIPE_SECRET_KEY=as_tuas_chaves
-    DB_URL=ligacao_mssql
-    ```
-3.  **Instalação:**
-    ```bash
-    # No Frontend e no Backend
-    npm install
-    ```
-4.  **Execução:**
-    ```bash
-    npm run dev
-    ```
-
 ---
 📅 *FutBuddies - Simplifying the game.*
