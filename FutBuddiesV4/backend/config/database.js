@@ -9,14 +9,25 @@ const sql = require('mssql');
 
 const usaWindowsAuth = process.env.DB_WINDOWS_AUTH === 'true';
 
+// Azure SQL exige encrypt=true. Em local podes pôr DB_ENCRYPT=false.
+const encrypt = (process.env.DB_ENCRYPT || 'false').toLowerCase() === 'true';
+const trustServerCertificate = (process.env.DB_TRUST_CERT || 'true').toLowerCase() === 'true';
+
+// Aceita DB_SERVER (preferido) ou DB_HOST (legado). Em produção falha se ausente.
+const server = process.env.DB_SERVER || process.env.DB_HOST || (process.env.NODE_ENV === 'production' ? null : 'localhost');
+if (!server) {
+  console.error('❌ DB_SERVER (ou DB_HOST) é obrigatório em produção.');
+  process.exit(1);
+}
+
 const dbConfig = {
-  server: process.env.DB_HOST || 'localhost',
+  server,
   port: parseInt(process.env.DB_PORT) || 1433,
   database: process.env.DB_NAME || 'FutBuddies',
   // Windows Auth não usa user/password — usa o login do Windows
   ...(usaWindowsAuth
     ? { user: process.env.DB_USER, password: process.env.DB_PASSWORD, domain: process.env.DB_DOMAIN || '', options: { trustedConnection: true, trustServerCertificate: true, enableArithAbort: true, encrypt: false } }
-    : { user: process.env.DB_USER, password: process.env.DB_PASSWORD, options: { encrypt: false, trustServerCertificate: true, enableArithAbort: true } }
+    : { user: process.env.DB_USER, password: process.env.DB_PASSWORD, options: { encrypt, trustServerCertificate, enableArithAbort: true } }
   ),
   pool: { max: 25, min: 2, idleTimeoutMillis: 30000, acquireTimeoutMillis: 15000 },
   connectionTimeout: 30000,
@@ -48,7 +59,7 @@ async function getPool() {
       pool = null;
       console.error('❌ Erro ao ligar ao SQL Server:', err.message);
       console.error(`   Modo: ${usaWindowsAuth ? 'Windows Authentication' : 'SQL Authentication'}`);
-      console.error('   Servidor:', process.env.DB_HOST || 'localhost');
+      console.error('   Servidor:', server);
       console.error('   Base de dados:', process.env.DB_NAME || 'FutBuddies');
       throw err;
     } finally {
