@@ -221,7 +221,10 @@ export function Registar() {
     setLoading(true);
     try {
       await registar(form.nome, form.email, form.password);
-      navigate('/jogos');
+      // Marca como "primeira sessão" — o /perfil pode mostrar onboarding.
+      sessionStorage.setItem('fb_first_login', '1');
+      // Conta nova → vai direto ao perfil para personalizar (foto, posição, região, etc.)
+      navigate('/perfil?welcome=1');
     } catch (err) {
       setErro(err.response?.data?.mensagem || 'Erro ao criar conta. Tenta novamente.');
     } finally {

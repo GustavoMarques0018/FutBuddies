@@ -738,3 +738,139 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
   font-size: 1.05rem;
   max-width: 640px;
 }
+
+/* ============================================================
+   Date / Time / DateTime — picker tematizado (verde + dark)
+   Funciona em Chromium (incl. Edge/Brave). No Firefox a UI é
+   mais limitada mas o esquema de cores ainda se aplica.
+   ============================================================ */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  /* Sugere ao browser para usar a paleta dark/light coerente */
+  color-scheme: dark light;
+}
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="time"],
+[data-theme="light"] input[type="datetime-local"],
+[data-theme="light"] input[type="month"],
+[data-theme="light"] input[type="week"] {
+  color-scheme: light;
+}
+input[type="date"]:hover,
+input[type="time"]:hover,
+input[type="datetime-local"]:hover {
+  border-color: var(--border-hover);
+}
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+input[type="date"]:disabled,
+input[type="time"]:disabled,
+input[type="datetime-local"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Ícone do calendário/relógio (Chromium) — pinta de verde */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  filter: invert(0.65) sepia(0.6) saturate(8) hue-rotate(75deg);
+  transition: background .15s ease, filter .15s ease, transform .12s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  background: var(--primary-soft);
+  transform: scale(1.08);
+}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.35) sepia(1) saturate(5) hue-rotate(75deg);
+}
+
+/* Texto interno (placeholder e valor) */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit {
+  color: var(--text);
+}
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="time"]::-webkit-datetime-edit-text,
+input[type="datetime-local"]::-webkit-datetime-edit-text {
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
+/* ============================================================
+   Banner de boas-vindas no Perfil (após registo)
+   ============================================================ */
+.perfil-welcome {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-left: 4px solid var(--primary);
+  background: linear-gradient(135deg, var(--primary-soft), transparent 65%);
+  animation: welcomeIn .4s ease;
+}
+.perfil-welcome-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.perfil-welcome-body { flex: 1; min-width: 0; }
+.perfil-welcome-body h3 {
+  margin: 0 0 0.25rem 0;
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.perfil-welcome-body p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+@keyframes welcomeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 540px) {
+  .perfil-welcome { flex-direction: column; align-items: flex-start; text-align: left; }
+  .perfil-welcome-icon { font-size: 1.5rem; }
+}

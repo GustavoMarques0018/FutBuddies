@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import api from '../utils/api';
@@ -20,6 +20,16 @@ export default function Perfil() {
   const { utilizador: authUser, logout, atualizarUtilizador } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showWelcome, setShowWelcome] = useState(searchParams.get('welcome') === '1');
+  const dispensarWelcome = () => {
+    setShowWelcome(false);
+    sessionStorage.removeItem('fb_first_login');
+    // remove ?welcome=1 do URL
+    const next = new URLSearchParams(searchParams);
+    next.delete('welcome');
+    setSearchParams(next, { replace: true });
+  };
   const [perfil, setPerfil] = useState(null);
   const [equipa, setEquipa] = useState(null);
   const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true });
@@ -86,6 +96,21 @@ export default function Perfil() {
   return (
     <div className="perfil-page">
       <div className="container" style={{ maxWidth: 860 }}>
+
+        {/* Banner de boas-vindas (primeiro login após registo) */}
+        {showWelcome && (
+          <div className="perfil-welcome card" role="status">
+            <div className="perfil-welcome-icon">⚽</div>
+            <div className="perfil-welcome-body">
+              <h3>Bem-vindo ao FutBuddies, {authUser?.nome?.split(' ')[0] || 'jogador'}!</h3>
+              <p>Para começares, personaliza o teu perfil: foto, posição, região e nickname.
+                 Outros jogadores vão ver-te assim quando entrares em jogos e equipas.</p>
+            </div>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={dispensarWelcome}>
+              Mais tarde
+            </button>
+          </div>
+        )}
 
         {/* Header */}
         <div className="perfil-header card" style={{ marginBottom: '1.5rem' }}>
