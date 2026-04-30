@@ -278,3 +278,83 @@
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.4; }
 }
+
+/* ============================================================
+   Modal de PIN para atalhos DEV em produção
+   ============================================================ */
+.pin-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid; place-items: center;
+  z-index: 9999;
+  animation: pinFadeIn 0.18s ease;
+  padding: 1rem;
+}
+.pin-modal {
+  width: 100%; max-width: 380px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--primary-soft);
+  display: flex; flex-direction: column; gap: 0.85rem;
+  animation: pinSlideIn 0.22s cubic-bezier(.2,.9,.3,1.2);
+}
+.pin-modal-header {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.pin-modal-icon {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 6px var(--primary-glow));
+}
+.pin-modal-header h3 {
+  margin: 0; font-size: 1.05rem; color: var(--text);
+}
+.pin-modal-text {
+  margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.45;
+}
+.pin-modal-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  font-family: inherit;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pin-modal-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+.pin-modal-erro {
+  color: #ff6b81;
+  font-size: 0.85rem;
+  text-align: center;
+  background: rgba(255, 77, 109, 0.08);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+.pin-modal-actions {
+  display: flex; gap: 0.5rem; justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+@keyframes pinFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pinSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 480px) {
+  .pin-modal-actions { flex-direction: column-reverse; }
+  .pin-modal-actions .btn { width: 100%; }
+}

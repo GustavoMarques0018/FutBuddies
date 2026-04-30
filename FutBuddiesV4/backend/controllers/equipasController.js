@@ -492,7 +492,7 @@ async function getMensagensEquipa(req, res) {
 
     const resultado = await query(
       `SELECT m.id, m.mensagem, m.tipo, m.created_at,
-              u.id AS utilizador_id, u.nome, u.nickname, u.foto_url
+              u.id AS utilizador_id, u.nome, u.nickname, u.foto_url, u.perfil_publico
        FROM mensagens_equipa m
        JOIN utilizadores u ON m.utilizador_id = u.id
        WHERE m.equipa_id = @equipaId

@@ -1,0 +1,213 @@
+/* ============================================================
+   DatePickerFB — tema FutBuddies (verde + dark)
+   Sobrescreve estilos default do react-datepicker.
+   ============================================================ */
+
+/* ── Trigger (botão que substitui o input) ───────────────── */
+.fbdp-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.fbdp-trigger:hover:not(:disabled)  { border-color: var(--border-hover); }
+.fbdp-trigger:focus-visible        {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.fbdp-trigger:disabled             { opacity: 0.55; cursor: not-allowed; }
+.fbdp-trigger-empty                { color: var(--text-muted); }
+.fbdp-trigger-text                 {
+  flex: 1; text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fbdp-trigger-icon                 {
+  color: var(--primary); flex-shrink: 0;
+  filter: drop-shadow(0 0 4px var(--primary-glow));
+}
+
+/* ── Portal raiz (gerado pela lib em <body>) ─────────────── */
+.react-datepicker__portal {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── Popper / wrapper geral ──────────────────────────────── */
+.fbdp-popper                       { z-index: 9999 !important; }
+
+.fbdp-calendar.react-datepicker {
+  background: var(--bg-elev-1) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px var(--primary-soft) !important;
+  font-family: inherit !important;
+  color: var(--text) !important;
+  overflow: hidden;
+}
+
+/* ── Header (mês + setas + dias da semana) ───────────────── */
+.fbdp-calendar .react-datepicker__header {
+  background: linear-gradient(135deg, var(--primary-soft), transparent 75%) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0.85rem 0.75rem 0.6rem !important;
+}
+.fbdp-calendar .react-datepicker__current-month,
+.fbdp-calendar .react-datepicker-time__header,
+.fbdp-calendar .react-datepicker-year-header {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  text-transform: capitalize;
+}
+.fbdp-calendar .react-datepicker__day-name {
+  color: var(--text-muted) !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: 2.25rem !important;
+  margin: 0.15rem !important;
+}
+
+/* ── Setas de navegação (◀ ▶) ────────────────────────────── */
+.fbdp-calendar .react-datepicker__navigation {
+  top: 0.95rem !important;
+}
+.fbdp-calendar .react-datepicker__navigation--previous { left: 0.5rem !important; }
+.fbdp-calendar .react-datepicker__navigation--next     { right: 0.5rem !important; }
+.fbdp-calendar .react-datepicker__navigation-icon::before {
+  border-color: var(--text-secondary) !important;
+  border-width: 2px 2px 0 0 !important;
+  height: 8px !important; width: 8px !important;
+  transition: border-color 0.15s ease;
+}
+.fbdp-calendar .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: var(--primary) !important;
+}
+
+/* ── Dias do mês ────────────────────────────────────────── */
+.fbdp-calendar .react-datepicker__month                { padding: 0.4rem 0.5rem 0.6rem !important; margin: 0 !important; }
+.fbdp-calendar .react-datepicker__day {
+  color: var(--text) !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  line-height: 2.25rem !important;
+  margin: 0.15rem !important;
+  border-radius: 8px !important;
+  font-size: 0.88rem !important;
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+.fbdp-calendar .react-datepicker__day:hover {
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+.fbdp-calendar .react-datepicker__day--outside-month   { color: var(--text-muted) !important; opacity: 0.55; }
+.fbdp-calendar .react-datepicker__day--today           {
+  font-weight: 800 !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+}
+.fbdp-calendar .react-datepicker__day--selected,
+.fbdp-calendar .react-datepicker__day--keyboard-selected {
+  background: var(--primary) !important;
+  color: #0a0f0c !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 18px var(--primary-glow);
+}
+.fbdp-calendar .react-datepicker__day--disabled        {
+  color: var(--text-muted) !important;
+  opacity: 0.4;
+  cursor: not-allowed !important;
+}
+.fbdp-calendar .react-datepicker__day--disabled:hover  {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Time picker (lado direito ou em baixo no mobile) ───── */
+.fbdp-calendar .react-datepicker__time-container       {
+  border-left: 1px solid var(--border) !important;
+  width: 90px !important;
+}
+.fbdp-calendar .react-datepicker__time {
+  background: var(--bg-elev-1) !important;
+}
+.fbdp-calendar .react-datepicker__time-box {
+  width: 100% !important;
+}
+.fbdp-calendar .react-datepicker__time-list {
+  background: var(--bg-elev-1) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--bg-elev-2);
+}
+.fbdp-calendar .react-datepicker__time-list::-webkit-scrollbar          { width: 6px; }
+.fbdp-calendar .react-datepicker__time-list::-webkit-scrollbar-track    { background: var(--bg-elev-2); }
+.fbdp-calendar .react-datepicker__time-list::-webkit-scrollbar-thumb    { background: var(--primary); border-radius: 4px; }
+
+.fbdp-calendar .react-datepicker__time-list-item {
+  color: var(--text) !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+  padding: 0 0.5rem !important;
+  font-size: 0.85rem !important;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.fbdp-calendar .react-datepicker__time-list-item:hover {
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+.fbdp-calendar .react-datepicker__time-list-item--selected {
+  background: var(--primary) !important;
+  color: #0a0f0c !important;
+  font-weight: 800 !important;
+}
+.fbdp-calendar .react-datepicker__time-list-item--disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.4;
+}
+
+/* ── Today button ───────────────────────────────────────── */
+.fbdp-calendar .react-datepicker__today-button {
+  background: var(--bg-elev-2) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  border-top: 1px solid var(--border) !important;
+  padding: 0.6rem !important;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.fbdp-calendar .react-datepicker__today-button:hover { background: var(--primary-soft) !important; }
+
+/* Triangle / arrow do popper escondido (visual mais clean) */
+.fbdp-calendar .react-datepicker__triangle             { display: none !important; }
+
+/* ── Mobile (portal cobre todo o ecrã) ──────────────────── */
+@media (max-width: 540px) {
+  .fbdp-calendar.react-datepicker {
+    flex-direction: column;
+  }
+  .fbdp-calendar .react-datepicker__time-container {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  .fbdp-calendar .react-datepicker__time-box {
+    margin: 0 !important;
+  }
+  .fbdp-calendar .react-datepicker__time-list {
+    max-height: 180px !important;
+  }
+}

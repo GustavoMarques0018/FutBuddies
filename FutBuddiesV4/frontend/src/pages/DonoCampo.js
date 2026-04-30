@@ -7,6 +7,7 @@ import { resolverImgUrl } from '../utils/constantes';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
 import DonoDashboard from '../components/DonoDashboard';
+import DatePickerFB from '../components/DatePickerFB';
 import './DonoCampo.css';
 
 const fmt = (c) => (c == null ? '—' : `€${(c / 100).toFixed(2)}`);
@@ -814,10 +815,10 @@ function BloqueioModal({ campos, onClose, onSaved, addToast }) {
             </select>
           </label>
           <label>Início
-            <input type="datetime-local" required value={form.inicio} onChange={e => set('inicio', e.target.value)} />
+            <DatePickerFB mode="datetime" value={form.inicio} onChange={(v) => set('inicio', v)} placeholder="Início" />
           </label>
           <label>Fim
-            <input type="datetime-local" required value={form.fim} onChange={e => set('fim', e.target.value)} />
+            <DatePickerFB mode="datetime" value={form.fim} onChange={(v) => set('fim', v)} placeholder="Fim" />
           </label>
           <label>Motivo
             <input value={form.motivo} onChange={e => set('motivo', e.target.value)} placeholder="Manutenção, evento privado..." />

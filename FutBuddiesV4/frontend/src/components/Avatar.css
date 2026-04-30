@@ -1,0 +1,30 @@
+.fb-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+  border: 1.5px solid var(--border);
+  background-clip: padding-box;
+  vertical-align: middle;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.fb-avatar:hover {
+  border-color: var(--primary);
+}
+.fb-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fb-avatar-initials {
+  line-height: 1;
+  font-family: inherit;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
