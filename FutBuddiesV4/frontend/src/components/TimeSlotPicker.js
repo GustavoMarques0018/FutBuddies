@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../utils/api';
+import DatePickerFB from './DatePickerFB';
 import './TimeSlotPicker.css';
 
 const hojeISO = () => {
@@ -73,11 +74,12 @@ export default function TimeSlotPicker({ campoId, value, onChange }) {
     <div className="tsp-wrap">
       <div className="tsp-header">
         <label className="tsp-date-label">Data</label>
-        <input
-          type="date"
+        <DatePickerFB
+          mode="date"
           value={data}
           min={hojeISO()}
-          onChange={(e) => setData(e.target.value)}
+          onChange={(v) => setData(v)}
+          placeholder="Escolhe data"
           className="tsp-date"
         />
       </div>

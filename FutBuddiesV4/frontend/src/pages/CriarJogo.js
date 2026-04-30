@@ -13,6 +13,7 @@ import {
   IconMapPin, IconClock,
 } from '../components/Icons';
 import TimeSlotPicker from '../components/TimeSlotPicker';
+import DatePickerFB from '../components/DatePickerFB';
 import './CriarJogo.css';
 
 function parseArr(raw, fallback) {
@@ -262,9 +263,13 @@ export default function CriarJogo() {
               {form.tipoLocal !== 'parceiro' && (
                 <div className="form-field">
                   <label>Data e Hora *</label>
-                  <input type="datetime-local" value={form.dataJogo}
-                    onChange={e => setForm({ ...form, dataJogo: e.target.value })}
-                    required min={new Date().toISOString().slice(0, 16)} />
+                  <DatePickerFB
+                    mode="datetime"
+                    value={form.dataJogo}
+                    onChange={(v) => setForm({ ...form, dataJogo: v })}
+                    min={new Date()}
+                    placeholder="Escolhe data e hora"
+                  />
                 </div>
               )}
               <div className="form-field">

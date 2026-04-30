@@ -17,6 +17,8 @@ import CodigoAcesso from '../components/CodigoAcesso';
 import PagamentoJogo from '../components/PagamentoJogo';
 import MVPVoting from '../components/MVPVoting';
 import SorteioEquipas from '../components/SorteioEquipas';
+import DatePickerFB from '../components/DatePickerFB';
+import Avatar from '../components/Avatar';
 import './Jogos.css';
 
 export default function JogoDetalhe() {
@@ -568,9 +570,9 @@ export default function JogoDetalhe() {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Sem jogadores</p>
                       ) : eq.jogadores.map(j => (
                         <Link key={j.id} to={`/jogadores/${j.utilizador_id}`} className="equipa-jogador" style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div className="avatar" style={{ width: 28, height: 28, fontSize: '0.7rem', background: eq.cor }}>{getInitials(j.nome)}</div>
+                          <Avatar nome={j.nome} fotoUrl={j.foto_url} perfilPublico={j.perfil_publico} size={28} />
                           <div>
-                            <p className="equipa-jogador-nome">{j.nome}</p>
+                            <p className="equipa-jogador-nome">{j.nickname || j.nome}</p>
                             {j.posicao && <p className="equipa-jogador-posicao">{j.posicao}</p>}
                           </div>
                         </Link>
@@ -604,12 +606,19 @@ export default function JogoDetalhe() {
                   return (
                     <div key={msg.id} className={`chat-msg ${isMine ? 'mine' : ''}`}>
                       {!isMine && (
-                        <Link to={`/jogadores/${msg.utilizador_id}`} className="chat-msg-nome">
-                          {msg.utilizador_nome}
+                        <Link to={`/jogadores/${msg.utilizador_id}`} className="chat-msg-avatar-link" aria-label={msg.utilizador_nome}>
+                          <Avatar nome={msg.utilizador_nome} fotoUrl={msg.foto_url} perfilPublico={msg.perfil_publico} size={30} />
                         </Link>
                       )}
-                      <div className="chat-msg-body">{msg.mensagem}</div>
-                      <span className="chat-msg-hora">{formatarHora(msg.created_at)}</span>
+                      <div className="chat-msg-content">
+                        {!isMine && (
+                          <Link to={`/jogadores/${msg.utilizador_id}`} className="chat-msg-nome">
+                            {msg.nickname || msg.utilizador_nome}
+                          </Link>
+                        )}
+                        <div className="chat-msg-body">{msg.mensagem}</div>
+                        <span className="chat-msg-hora">{formatarHora(msg.created_at)}</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -654,7 +663,7 @@ export default function JogoDetalhe() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <div className="form-field">
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>Data e Hora</label>
-                    <input type="datetime-local" value={editForm.dataJogo} onChange={e => setEditForm({ ...editForm, dataJogo: e.target.value })} />
+                    <DatePickerFB mode="datetime" value={editForm.dataJogo} onChange={(v) => setEditForm({ ...editForm, dataJogo: v })} placeholder="Data e hora" />
                   </div>
                   <div className="form-field">
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>Região</label>

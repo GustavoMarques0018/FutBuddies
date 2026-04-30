@@ -13,6 +13,7 @@ import {
 } from '../components/Icons';
 import { useConfirm, usePrompt } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
+import DatePickerFB from '../components/DatePickerFB';
 
 // Helper: detecta se um valor de "emblema" é uma URL (http(s)://, /caminho, data:)
 // — se for, renderiza como <img>; caso contrário usa o texto/emoji.
@@ -442,11 +443,11 @@ export default function Admin() {
                   <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--text-secondary)' }}>
                     Expira em (opcional)
                   </label>
-                  <input
-                    type="datetime-local"
-                    className="input"
+                  <DatePickerFB
+                    mode="datetime"
                     value={notaForm.expira_em}
-                    onChange={(e) => setNotaForm({ ...notaForm, expira_em: e.target.value })}
+                    onChange={(v) => setNotaForm({ ...notaForm, expira_em: v })}
+                    placeholder="Sem expiração"
                   />
                   <small style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     Se definido, as notificações desaparecem automaticamente após esta data.

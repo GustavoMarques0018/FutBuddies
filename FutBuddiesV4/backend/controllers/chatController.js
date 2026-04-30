@@ -23,7 +23,8 @@ async function getMensagens(req, res) {
     const resultado = await query(
       `SELECT TOP (@limite)
          m.id, m.mensagem, m.tipo, m.created_at,
-         u.id AS utilizador_id, u.nome AS utilizador_nome, u.foto_perfil
+         u.id AS utilizador_id, u.nome AS utilizador_nome,
+         u.nickname, u.foto_url, u.perfil_publico
        FROM mensagens_chat m
        JOIN utilizadores u ON m.utilizador_id = u.id
        ${whereClause}

@@ -106,6 +106,37 @@ export function Login() {
   const isDev = process.env.NODE_ENV !== 'production'
     || process.env.REACT_APP_SHOW_DEV_LOGINS === '1';
 
+  // Em produção exigimos PIN antes de usar os atalhos DEV (evita estranhos a entrar).
+  // Em dev local saltamos o PIN.
+  const DEV_PIN = '1598';
+  const PIN_OK_KEY = 'fb_dev_pin_ok';
+  const requerPin = process.env.NODE_ENV === 'production';
+  const [pinModal, setPinModal] = useState(null); // { preset } | null
+  const [pinInput, setPinInput] = useState('');
+  const [pinErro, setPinErro] = useState('');
+
+  const onClickDevBtn = (preset) => {
+    if (!requerPin || sessionStorage.getItem(PIN_OK_KEY) === '1') {
+      devLogin(preset);
+      return;
+    }
+    setPinErro('');
+    setPinInput('');
+    setPinModal({ preset });
+  };
+
+  const submeterPin = (e) => {
+    e?.preventDefault?.();
+    if (pinInput === DEV_PIN) {
+      sessionStorage.setItem(PIN_OK_KEY, '1');
+      const preset = pinModal.preset;
+      setPinModal(null);
+      devLogin(preset);
+    } else {
+      setPinErro('PIN incorreto.');
+    }
+  };
+
   const devLogin = async (preset) => {
     setErro('');
     setForm({ email: preset.email, password: preset.password });
@@ -181,7 +212,7 @@ export function Login() {
                   type="button"
                   className={`auth-dev-btn auth-dev-${p.cor}`}
                   disabled={loading}
-                  onClick={() => devLogin(p)}
+                  onClick={() => onClickDevBtn(p)}
                   title={p.email}
                 >
                   {p.rotulo}
@@ -195,6 +226,42 @@ export function Login() {
           Ainda não tens conta? <Link to="/registar">Criar conta gratuita</Link>
         </p>
       </div>
+
+      {/* Modal de PIN para atalhos DEV em produção */}
+      {pinModal && (
+        <div className="pin-modal-backdrop" onClick={() => setPinModal(null)} role="dialog" aria-modal="true">
+          <form className="pin-modal" onClick={e => e.stopPropagation()} onSubmit={submeterPin}>
+            <div className="pin-modal-header">
+              <span className="pin-modal-icon">🔒</span>
+              <h3>Acesso restrito</h3>
+            </div>
+            <p className="pin-modal-text">
+              Os atalhos de demonstração exigem um PIN.
+              Pede ao desenvolvedor se não tiveres acesso.
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              autoFocus
+              className="pin-modal-input"
+              placeholder="• • • •"
+              value={pinInput}
+              onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, '')); setPinErro(''); }}
+            />
+            {pinErro && <div className="pin-modal-erro">{pinErro}</div>}
+            <div className="pin-modal-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setPinModal(null)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={pinInput.length < 4}>
+                Entrar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
