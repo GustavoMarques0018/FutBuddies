@@ -409,6 +409,18 @@ async function iniciar() {
       console.warn('⚠️  Falha migração carteira/push:', e.message);
     }
 
+    // Migração: receber_emails em utilizadores (opt-in default ON)
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.utilizadores','receber_emails') IS NULL
+          ALTER TABLE dbo.utilizadores
+            ADD receber_emails BIT NOT NULL CONSTRAINT DF_util_receber_emails DEFAULT 1;
+      `);
+      console.log('✅ Coluna receber_emails garantida');
+    } catch (e) {
+      console.warn('⚠️  Falha migração receber_emails:', e.message);
+    }
+
     // Migração: remover CHECK constraint em inscricoes.estado (para permitir 'espera')
     try {
       await pool.request().query(`

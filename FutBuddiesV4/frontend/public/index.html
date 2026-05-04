@@ -3,16 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="google" content="notranslate" />
-    <link rel="icon" type="image/png" href="%PUBLIC_URL%/logo-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/icon-192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#39FF14" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta name="description" content="FutBuddies — Organiza jogos de futebol com os teus amigos" />
     <meta name="author" content="Gustavo Marques — Projeto PAP 2026" />
+    <!-- iOS PWA -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FutBuddies" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/FbVerde.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <!-- Android Chrome -->
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon-32.png" />
     <!-- Google Fonts: Rajdhani + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,7 +38,7 @@
       if (isPWA) {
         document.write(
           '<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;">' +
-          '<img src="FbVerde.png" alt="" style="width:100px;height:100px;object-fit:contain;margin-bottom:1.5rem;animation:splashPulse 1.5s ease-in-out infinite;" />' +
+          '<img src="icon-192.png" alt="" style="width:100px;height:100px;object-fit:contain;margin-bottom:1.5rem;animation:splashPulse 1.5s ease-in-out infinite;border-radius:22px;" />' +
           '<p style="font-family:Rajdhani,sans-serif;font-size:1.6rem;font-weight:700;color:#fff;letter-spacing:-0.02em;margin:0;">Fut<span style=color:#39FF14>Buddies</span></p>' +
           '<div style="margin-top:2rem;width:40px;height:40px;border:3px solid rgba(57,255,20,0.2);border-top-color:#39FF14;border-radius:50%;animation:splashSpin 0.8s linear infinite;"></div>' +
           '</div>'
