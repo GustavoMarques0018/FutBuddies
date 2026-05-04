@@ -93,33 +93,37 @@ export function Login() {
     }
   };
 
-  // ── Atalhos de DEV (apenas em ambiente de desenvolvimento) ──
-  // Permitem entrar rapidamente com 3 contas-tipo para testes:
-  // Admin, Dono de campo (Cadera), Utilizador normal (Gustavo).
+  // ── Atalhos de DEV (login rápido) ──────────────────────────
+  // - Admin    → conta administradora oficial (criada pelo schema)
+  // - Dono     → dono de campo de testes
+  // - User     → utilizador normal de testes
+  // Contas "elevadas" (Admin, Dono) exigem PIN A CADA CLIQUE em produção.
+  // O atalho User entra direto.
   const DEV_LOGINS = [
-    { rotulo: 'Admin',           email: 'admin@futbuddies.com',   password: 'Gelado45#', cor: 'admin' },
-    { rotulo: 'Dono · Cadera',   email: 'cadera@futbuddies.com',  password: '123456',    cor: 'dono'  },
-    { rotulo: 'User · Gustavo',  email: 'gustavo@futbuddies.com', password: '123456',    cor: 'user' },
+    { rotulo: 'Admin',          email: 'admin@futbuddies.pt',    password: 'FutBuddies2026!', cor: 'admin', protegido: true  },
+    { rotulo: 'Dono · Cadera',  email: 'cadera@futbuddies.com',  password: '123456',          cor: 'dono',  protegido: true  },
+    { rotulo: 'User · Gustavo', email: 'gustavo@futbuddies.com', password: '123456',          cor: 'user',  protegido: false },
   ];
   // Mostra os atalhos sempre que NODE_ENV !== 'production', ou quando
   // REACT_APP_SHOW_DEV_LOGINS=1 (útil para demo/PAP em produção).
   const isDev = process.env.NODE_ENV !== 'production'
     || process.env.REACT_APP_SHOW_DEV_LOGINS === '1';
 
-  // Em produção exigimos PIN antes de usar os atalhos DEV (evita estranhos a entrar).
-  // Em dev local saltamos o PIN.
+  // Em produção, contas "protegidas" pedem PIN a cada clique (sem cache)
+  // para evitar que um estranho com o ecrã desbloqueado entre como Admin.
   const DEV_PIN = '1598';
-  const PIN_OK_KEY = 'fb_dev_pin_ok';
   const requerPin = process.env.NODE_ENV === 'production';
   const [pinModal, setPinModal] = useState(null); // { preset } | null
   const [pinInput, setPinInput] = useState('');
   const [pinErro, setPinErro] = useState('');
 
   const onClickDevBtn = (preset) => {
-    if (!requerPin || sessionStorage.getItem(PIN_OK_KEY) === '1') {
+    // User normal: entra direto, mesmo em produção.
+    if (!requerPin || !preset.protegido) {
       devLogin(preset);
       return;
     }
+    // Admin / Dono: SEMPRE pede PIN, sem caching de sessão.
     setPinErro('');
     setPinInput('');
     setPinModal({ preset });
@@ -128,12 +132,13 @@ export function Login() {
   const submeterPin = (e) => {
     e?.preventDefault?.();
     if (pinInput === DEV_PIN) {
-      sessionStorage.setItem(PIN_OK_KEY, '1');
       const preset = pinModal.preset;
       setPinModal(null);
+      setPinInput('');
       devLogin(preset);
     } else {
       setPinErro('PIN incorreto.');
+      setPinInput('');
     }
   };
 
@@ -213,8 +218,9 @@ export function Login() {
                   className={`auth-dev-btn auth-dev-${p.cor}`}
                   disabled={loading}
                   onClick={() => onClickDevBtn(p)}
-                  title={p.email}
+                  title={requerPin && p.protegido ? `${p.email} (requer PIN)` : p.email}
                 >
+                  {requerPin && p.protegido && <span className="auth-dev-lock" aria-hidden="true">🔒</span>}
                   {p.rotulo}
                 </button>
               ))}
