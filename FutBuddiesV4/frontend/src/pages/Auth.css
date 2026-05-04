@@ -358,3 +358,11 @@
   .pin-modal-actions { flex-direction: column-reverse; }
   .pin-modal-actions .btn { width: 100%; }
 }
+
+/* Pequeno cadeado nos botões DEV protegidos por PIN */
+.auth-dev-lock {
+  font-size: 0.7em;
+  margin-right: 0.3em;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 4px currentColor);
+}
