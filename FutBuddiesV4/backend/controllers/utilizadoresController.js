@@ -42,7 +42,9 @@ async function getPerfil(req, res) {
     const temPP = await temColunaPerfilPublico();
     const temUR = await temColunaUserRole();
     const cols = `id, nome, email, role, ${temUR ? 'user_role,' : ''} nickname, posicao, pe_preferido, regiao, cidade, bio, foto_url,
-                  total_jogos, total_golos, total_assistencias, ${temPP ? 'perfil_publico,' : ''} created_at, ultimo_login`;
+                  total_jogos, total_golos, total_assistencias, ${temPP ? 'perfil_publico,' : ''}
+                  COALESCE(receber_emails, 1) AS receber_emails,
+                  created_at, ultimo_login`;
     const resultado = await query(
       `SELECT ${cols} FROM utilizadores WHERE id = @id`,
       { id: req.utilizador.id }
@@ -62,18 +64,21 @@ async function getPerfil(req, res) {
 // PUT /api/utilizadores/perfil
 async function updatePerfil(req, res) {
   try {
-    const { posicao, cidade, bio, nickname, pePreferido, regiao, fotoUrl, perfilPublico } = req.body;
+    const { posicao, cidade, bio, nickname, pePreferido, regiao, fotoUrl, perfilPublico, receberEmails } = req.body;
     const temPP = await temColunaPerfilPublico();
     const perfilPubBit = (perfilPublico === undefined || perfilPublico === null) ? null : (perfilPublico ? 1 : 0);
+    const receberBit  = (receberEmails  === undefined || receberEmails  === null) ? null : (receberEmails  ? 1 : 0);
     const setPP = temPP ? `, perfil_publico = COALESCE(@perfilPub, perfil_publico)` : '';
     const params = { posicao: posicao||null, cidade: cidade||null, bio: bio||null,
         nickname: nickname||null, pePreferido: pePreferido||null,
         regiao: regiao||null, fotoUrl: fotoUrl||null, id: req.utilizador.id };
     if (temPP) params.perfilPub = perfilPubBit;
+    params.receber = receberBit;
     await query(
       `UPDATE utilizadores
        SET posicao=@posicao, cidade=@cidade, bio=@bio, nickname=@nickname,
-           pe_preferido=@pePreferido, regiao=@regiao, foto_url=@fotoUrl
+           pe_preferido=@pePreferido, regiao=@regiao, foto_url=@fotoUrl,
+           receber_emails = COALESCE(@receber, receber_emails)
            ${setPP},
            updated_at=GETUTCDATE()
        WHERE id=@id`,

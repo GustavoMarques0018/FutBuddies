@@ -113,7 +113,7 @@ async function eliminarNotificacao(req, res) {
  */
 async function criarNotificacao({ utilizadorId, tipo, titulo, mensagem = null,
                                    jogoId = null, equipaId = null, acaoUrl = null,
-                                   expiraEm = null }) {
+                                   expiraEm = null, enviarEmail: enviarEmailOpt = true }) {
   await query(
     `INSERT INTO notificacoes (utilizador_id, tipo, titulo, mensagem, jogo_id, equipa_id, acao_url, expira_em)
        VALUES (@uid, @tipo, @titulo, @msg, @jid, @eid, @url, @exp)`,
@@ -122,7 +122,13 @@ async function criarNotificacao({ utilizadorId, tipo, titulo, mensagem = null,
       jid: jogoId, eid: equipaId, url: acaoUrl, exp: expiraEm,
     }
   );
-  // Envia também web push (best-effort, não bloqueia)
+
+  const appUrl = process.env.APP_BASE_URL || 'https://futbuddies.vercel.app';
+  const ctaUrl = acaoUrl
+    ? (acaoUrl.startsWith('http') ? acaoUrl : `${appUrl}${acaoUrl}`)
+    : `${appUrl}/notificacoes`;
+
+  // ── Web Push (best-effort) ───────────────────────────────
   try {
     const { enviarPush } = require('./webPushController');
     enviarPush(utilizadorId, {
@@ -130,6 +136,48 @@ async function criarNotificacao({ utilizadorId, tipo, titulo, mensagem = null,
       url: acaoUrl || '/notificacoes',
     }).catch(() => {});
   } catch { /* push controller pode não estar carregado */ }
+
+  // ── Email (best-effort, opt-in via coluna receber_emails) ──
+  if (enviarEmailOpt) {
+    enviarEmailNotificacao({ utilizadorId, titulo, mensagem, ctaUrl, tipo })
+      .catch((e) => console.warn('[Notif] email falhou:', e.message));
+  }
+}
+
+/**
+ * Envia versão email de uma notificação. Lê o email do utilizador e
+ * verifica a flag `receber_emails`. Best-effort, nunca bloqueia.
+ */
+async function enviarEmailNotificacao({ utilizadorId, titulo, mensagem, ctaUrl, tipo }) {
+  const mailer = require('../config/mailer');
+  if (!mailer.ativo()) return;
+
+  const r = await query(
+    `SELECT email, nome,
+            COALESCE(receber_emails, 1) AS receber_emails
+       FROM utilizadores WHERE id = @uid`,
+    { uid: utilizadorId }
+  );
+  const u = r.recordset[0];
+  if (!u || !u.email || !u.receber_emails) return;
+
+  // Para tipos "ruidosos" (chat) podemos no futuro filtrar por preferências;
+  // por agora envia tudo.
+  void tipo;
+
+  const corpoHtml = `<p>Olá ${(u.nome || '').split(' ')[0] || 'jogador'},</p>
+<p>${(mensagem || '').replace(/\n/g, '<br>')}</p>`;
+  const corpoTxt = `Olá ${(u.nome || '').split(' ')[0] || 'jogador'},\n\n${mensagem || ''}\n\nAbre: ${ctaUrl}`;
+
+  await mailer.enviarEmail({
+    to: u.email,
+    subject: `[FutBuddies] ${titulo}`,
+    text: corpoTxt,
+    html: mailer.gerarHtml({
+      titulo, corpo: corpoHtml,
+      ctaLabel: 'Abrir no FutBuddies', ctaUrl,
+    }),
+  });
 }
 
 /**

@@ -32,7 +32,7 @@ export default function Perfil() {
   };
   const [perfil, setPerfil] = useState(null);
   const [equipa, setEquipa] = useState(null);
-  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true });
+  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true, receberEmails: true });
   const [passForm, setPassForm] = useState({ passwordAtual:'', novaPassword:'', confirmar:'' });
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -49,7 +49,8 @@ export default function Perfil() {
       setEquipa(equipaRes.data.equipa);
       setForm({ posicao: u.posicao||'', cidade: u.cidade||'', bio: u.bio||'',
         nickname: u.nickname||'', pePreferido: u.pe_preferido||'', regiao: u.regiao||'', fotoUrl: u.foto_url||'',
-        perfilPublico: u.perfil_publico === undefined ? true : !!u.perfil_publico });
+        perfilPublico: u.perfil_publico === undefined ? true : !!u.perfil_publico,
+        receberEmails: u.receber_emails === undefined ? true : !!u.receber_emails });
     }).catch(() => addToast('Erro ao carregar perfil.', 'error'))
       .finally(() => setLoading(false));
   }, []);
@@ -60,7 +61,9 @@ export default function Perfil() {
     try {
       await api.put('/utilizadores/perfil', form);
       addToast('Perfil atualizado!', 'success');
-      setPerfil(p => ({ ...p, ...form, pe_preferido: form.pePreferido, foto_url: form.fotoUrl, perfil_publico: form.perfilPublico ? 1 : 0 }));
+      setPerfil(p => ({ ...p, ...form, pe_preferido: form.pePreferido, foto_url: form.fotoUrl,
+        perfil_publico: form.perfilPublico ? 1 : 0,
+        receber_emails: form.receberEmails ? 1 : 0 }));
       atualizarUtilizador({ nickname: form.nickname, foto_url: form.fotoUrl });
     } catch { addToast('Erro ao guardar.', 'error'); }
     finally { setGuardando(false); }
@@ -312,6 +315,34 @@ export default function Perfil() {
             {/* Notificações Push */}
             <div className="card" style={{ padding: '1.25rem' }}>
               <PushToggle />
+            </div>
+
+            {/* Email opt-in */}
+            <div className="card" style={{ padding: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                <div>
+                  <strong>📧 Notificações por email</strong>
+                  <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.15rem' }}>
+                    Recebe um email quando há novidades importantes (jogos, candidaturas, mensagens).
+                  </div>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer', flexShrink: 0,
+                                background: form.receberEmails ? 'var(--primary)' : 'var(--bg-elev-3)',
+                                border: `1.5px solid ${form.receberEmails ? 'var(--primary)' : 'var(--border)'}`,
+                                borderRadius: 999, transition: 'background .15s ease, border-color .15s ease' }}>
+                  <input type="checkbox" checked={form.receberEmails}
+                    onChange={async (e) => {
+                      const novo = e.target.checked;
+                      setForm(f => ({ ...f, receberEmails: novo }));
+                      try { await api.put('/utilizadores/perfil', { ...form, receberEmails: novo }); addToast(novo ? 'Vais receber emails 📧' : 'Emails desativados.', novo ? 'success' : 'info'); }
+                      catch { addToast('Falha ao guardar.', 'error'); setForm(f => ({ ...f, receberEmails: !novo })); }
+                    }}
+                    style={{ opacity: 0, width: 0, height: 0 }} />
+                  <span style={{ position: 'absolute', top: 3, left: form.receberEmails ? 23 : 3,
+                                 width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                                 transition: 'left .18s ease' }} />
+                </label>
+              </div>
             </div>
 
             {/* Info da conta */}
