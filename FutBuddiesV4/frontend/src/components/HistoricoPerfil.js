@@ -20,7 +20,7 @@ function formatarMes(ym) {
 
 async function descarregarCSV() {
   try {
-    const token = localStorage.getItem('fb_token') || sessionStorage.getItem('fb_token');
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const resp = await fetch(`${API_BASE}/utilizadores/me/historico/csv`, {
       headers: { Authorization: `Bearer ${token}` },
     });

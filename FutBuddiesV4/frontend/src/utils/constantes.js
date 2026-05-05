@@ -37,11 +37,17 @@ const API_BASE = (process.env.REACT_APP_API_URL ||
 
 export const resolverImgUrl = (url) => {
   if (!url) return null;
-  // Se a URL contém localhost mas não estamos em localhost, re-escrever para o API_BASE atual.
-  if (url.includes('localhost') && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+
+  // URL Cloudinary (res.cloudinary.com) — devolver tal qual, é sempre válida
+  if (url.includes('cloudinary.com')) return url;
+
+  // URL absoluta com /uploads/ — extrair o path e reconstruir com o API_BASE actual.
+  // Corrige URLs guardadas com host errado: localhost em dev, ou host Render antigo em prod.
+  if (/^https?:\/\//.test(url) && url.includes('/uploads/')) {
     const path = url.replace(/^https?:\/\/[^/]+/, '');
     return API_BASE + path;
   }
+
   if (url.startsWith('http')) return url;
   if (url.startsWith('/uploads')) return API_BASE + url;
   return url;
