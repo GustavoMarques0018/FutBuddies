@@ -30,6 +30,29 @@ const IconX = ({ size = '0.85rem' }) => (
   </svg>
 );
 
+// Beep curto via WebAudio — sem precisar ficheiro de som no public/
+let _audioCtx = null;
+function tocarBeep() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!_audioCtx) _audioCtx = new Ctx();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    const ctx = _audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);          // Lá5
+    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08); // Mi6
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch { /* ignore */ }
+}
+
 const TIPO_COR = {
   nota_admin:        { cor: '#ffb020', label: '📢 Aviso' },
   resultado_jogo:    { cor: '#4dd0ff', label: '⚽ Jogo' },
@@ -82,17 +105,30 @@ export default function NotificacoesBell() {
     ? notificacoes
     : notificacoes.filter(n => filtroActivo.tipos.includes(n.tipo));
 
-  // Polling leve do contador (a cada 60s)
+  const contadorAnteriorRef = useRef(0);
+  const podeBeepRef = useRef(false); // só toca som a partir do 2º polling (evita som ao abrir página)
+
+  // Polling do contador (a cada 30s — mais responsivo que 60s)
   const atualizarContador = useCallback(async () => {
     try {
       const r = await api.get('/notificacoes/nao-lidas-count');
-      setContador(r.data.total || 0);
+      const novo = r.data.total || 0;
+
+      // Tocar beep e shake quando AUMENTA o número de não-lidas
+      if (podeBeepRef.current && novo > contadorAnteriorRef.current) {
+        try {
+          if (localStorage.getItem('fb_notif_som') !== '0') tocarBeep();
+        } catch {}
+      }
+      contadorAnteriorRef.current = novo;
+      podeBeepRef.current = true;
+      setContador(novo);
     } catch {}
   }, []);
 
   useEffect(() => {
     atualizarContador();
-    const id = setInterval(atualizarContador, 60 * 1000);
+    const id = setInterval(atualizarContador, 30 * 1000);
     return () => clearInterval(id);
   }, [atualizarContador]);
 
@@ -159,11 +195,28 @@ export default function NotificacoesBell() {
         <div ref={painelRef} className="notif-painel">
           <div className="notif-painel-header">
             <span>Notificações</span>
-            {contador > 0 && (
-              <button className="notif-btn-link" onClick={marcarTodas}>
-                <IconCheck /> Marcar todas lidas
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button
+                className="notif-btn-link"
+                title={localStorage.getItem('fb_notif_som') === '0' ? 'Ativar som' : 'Desativar som'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const off = localStorage.getItem('fb_notif_som') === '0';
+                  if (off) localStorage.removeItem('fb_notif_som');
+                  else localStorage.setItem('fb_notif_som', '0');
+                  // pequena vibração visual: re-render
+                  setContador(c => c);
+                }}
+                style={{ padding: '0.25rem 0.5rem' }}
+              >
+                {localStorage.getItem('fb_notif_som') === '0' ? '🔇' : '🔊'}
               </button>
-            )}
+              {contador > 0 && (
+                <button className="notif-btn-link" onClick={marcarTodas}>
+                  <IconCheck /> Marcar todas lidas
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="notif-filtros">

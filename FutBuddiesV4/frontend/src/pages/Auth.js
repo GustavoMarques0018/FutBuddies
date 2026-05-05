@@ -276,6 +276,17 @@ export function Login() {
 export function Registar() {
   const { registar } = useAuth();
   const navigate = useNavigate();
+  // Captura ?via=CODIGO no URL (vindo de link de convite). Persistimos
+  // em localStorage caso o utilizador navegue para /login antes de criar conta.
+  const queryRef = (typeof window !== 'undefined')
+    ? new URLSearchParams(window.location.search).get('via')
+    : null;
+  if (queryRef && typeof window !== 'undefined') {
+    try { localStorage.setItem('fb_referral', queryRef); } catch {}
+  }
+  const referralCode = queryRef
+    || (typeof window !== 'undefined' ? localStorage.getItem('fb_referral') : null);
+
   const [form, setForm] = useState({ nome: '', email: '', password: '', confirmar: '' });
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
@@ -293,7 +304,8 @@ export function Registar() {
 
     setLoading(true);
     try {
-      await registar(form.nome, form.email, form.password);
+      await registar(form.nome, form.email, form.password, referralCode);
+      try { localStorage.removeItem('fb_referral'); } catch {}
       // Marca como "primeira sessão" — o /perfil pode mostrar onboarding.
       sessionStorage.setItem('fb_first_login', '1');
       // Conta nova → vai direto ao perfil para personalizar (foto, posição, região, etc.)

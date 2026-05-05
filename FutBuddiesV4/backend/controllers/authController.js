@@ -35,7 +35,7 @@ function gerarTokens(utilizador) {
 // POST /api/auth/registar
 async function registar(req, res) {
   try {
-    const { nome, email, password } = req.body;
+    const { nome, email, password, referralCode } = req.body;
 
     if (!nome || !email || !password) {
       return res.status(400).json({ sucesso: false, mensagem: 'Nome, email e password são obrigatórios.' });
@@ -54,16 +54,44 @@ async function registar(req, res) {
       return res.status(409).json({ sucesso: false, mensagem: 'Este email já está registado.' });
     }
 
+    // Procurar referrer pelo código (case-insensitive)
+    let referidoPor = null;
+    if (referralCode) {
+      try {
+        const r = await query(
+          `SELECT id FROM utilizadores WHERE UPPER(referral_code) = UPPER(@code)`,
+          { code: String(referralCode).trim() }
+        );
+        if (r.recordset.length > 0) referidoPor = r.recordset[0].id;
+      } catch { /* coluna pode ainda não existir em DBs antigas */ }
+    }
+
     // Hash da password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Inserir utilizador
-    const resultado = await query(
-      `INSERT INTO utilizadores (nome, email, password_hash, role, created_at, updated_at)
-       OUTPUT INSERTED.id, INSERTED.nome, INSERTED.email, INSERTED.role
-       VALUES (@nome, @email, @passwordHash, 'user', GETUTCDATE(), GETUTCDATE())`,
-      { nome, email, passwordHash }
-    );
+    // Gerar código de referral próprio (UPPER 4 letras + timestamp curto)
+    const slug = String(nome).normalize('NFD').replace(/[̀-ͯ]/g, '')
+                  .replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 4) || 'USER';
+    const codigo = `${slug}${Date.now().toString(36).slice(-4).toUpperCase()}`;
+
+    // Inserir utilizador (graceful degrade se as colunas novas não existirem)
+    let resultado;
+    try {
+      resultado = await query(
+        `INSERT INTO utilizadores (nome, email, password_hash, role, referral_code, referido_por, created_at, updated_at)
+         OUTPUT INSERTED.id, INSERTED.nome, INSERTED.email, INSERTED.role
+         VALUES (@nome, @email, @passwordHash, 'user', @codigo, @ref, GETUTCDATE(), GETUTCDATE())`,
+        { nome, email, passwordHash, codigo, ref: referidoPor }
+      );
+    } catch (eRef) {
+      console.warn('[Auth] insert com referral falhou, fallback sem colunas novas:', eRef.message);
+      resultado = await query(
+        `INSERT INTO utilizadores (nome, email, password_hash, role, created_at, updated_at)
+         OUTPUT INSERTED.id, INSERTED.nome, INSERTED.email, INSERTED.role
+         VALUES (@nome, @email, @passwordHash, 'user', GETUTCDATE(), GETUTCDATE())`,
+        { nome, email, passwordHash }
+      );
+    }
 
     const novoUtilizador = resultado.recordset[0];
     const { accessToken, refreshToken } = gerarTokens(novoUtilizador);
@@ -74,6 +102,20 @@ async function registar(req, res) {
        VALUES (@id, @token, DATEADD(DAY, 7, GETUTCDATE()))`,
       { id: novoUtilizador.id, token: refreshToken }
     );
+
+    // Notifica o referrer (se aplicável) — best-effort, não bloqueia
+    if (referidoPor) {
+      try {
+        const { criarNotificacao } = require('./notificacoesController');
+        criarNotificacao({
+          utilizadorId: referidoPor,
+          tipo: 'sistema',
+          titulo: '🎉 Alguém usou o teu convite!',
+          mensagem: `${nome} criou uma conta a partir do teu link de convite. Obrigado por trazer mais jogadores ao FutBuddies!`,
+          acaoUrl: '/perfil',
+        }).catch(() => {});
+      } catch { /* notif controller pode não estar disponível */ }
+    }
 
     res.status(201).json({
       sucesso: true,
