@@ -440,6 +440,48 @@ async function iniciar() {
       console.warn('⚠️  Falha migração referrals:', e.message);
     }
 
+    // Migração: coordenadas GPS em jogos e campos (para mapa interativo)
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','latitude') IS NULL
+          ALTER TABLE dbo.jogos ADD latitude DECIMAL(9,6) NULL;
+        IF COL_LENGTH('dbo.jogos','longitude') IS NULL
+          ALTER TABLE dbo.jogos ADD longitude DECIMAL(9,6) NULL;
+        IF COL_LENGTH('dbo.campos','latitude') IS NULL
+          ALTER TABLE dbo.campos ADD latitude DECIMAL(9,6) NULL;
+        IF COL_LENGTH('dbo.campos','longitude') IS NULL
+          ALTER TABLE dbo.campos ADD longitude DECIMAL(9,6) NULL;
+      `);
+      console.log('✅ Colunas latitude/longitude garantidas em jogos e campos');
+    } catch (e) {
+      console.warn('⚠️  Falha migração lat/lng:', e.message);
+    }
+
+    // Migração: avaliações entre jogadores (sistema de 5 estrelas pós-jogo)
+    try {
+      await pool.request().query(`
+        IF OBJECT_ID('dbo.avaliacoes_jogadores','U') IS NULL
+          CREATE TABLE dbo.avaliacoes_jogadores (
+            id           INT IDENTITY(1,1) PRIMARY KEY,
+            jogo_id      INT NOT NULL,
+            avaliador_id INT NOT NULL,
+            avaliado_id  INT NOT NULL,
+            nota         INT NOT NULL,
+            comentario   NVARCHAR(300) NULL,
+            created_at   DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+            CONSTRAINT UQ_aval_jog UNIQUE (jogo_id, avaliador_id, avaliado_id),
+            CONSTRAINT CHK_nota_range CHECK (nota BETWEEN 1 AND 5)
+          );
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_aval_jog_avaliado')
+          CREATE INDEX IX_aval_jog_avaliado ON dbo.avaliacoes_jogadores(avaliado_id);
+        IF COL_LENGTH('dbo.utilizadores','nota_media_jogador') IS NULL
+          ALTER TABLE dbo.utilizadores ADD nota_media_jogador DECIMAL(3,1) NULL;
+      `);
+      console.log('✅ Tabela avaliacoes_jogadores garantida');
+    } catch (e) {
+      console.warn('⚠️  Falha migração avaliacoes_jogadores:', e.message);
+    }
+
     // Migração: remover CHECK constraint em inscricoes.estado (para permitir 'espera')
     try {
       await pool.request().query(`

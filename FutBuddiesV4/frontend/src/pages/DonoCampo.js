@@ -491,6 +491,8 @@ function CampoModal({ campo, onClose, onSaved, addToast }) {
     tipoPiso: campo?.tipo_piso || '',
     morada: campo?.morada || '',
     regiao: campo?.regiao || '',
+    latitude: campo?.latitude || '',
+    longitude: campo?.longitude || '',
     precoHoraCents: campo?.preco_hora_cents || 0,
     duracaoMin: campo?.duracao_min || 60,
     horaAbertura: campo?.hora_abertura ?? 480,   // 08:00
@@ -591,6 +593,18 @@ function CampoModal({ campo, onClose, onSaved, addToast }) {
           <label>Região
             <input value={form.regiao} onChange={e => set('regiao', e.target.value)} />
           </label>
+          <div className="row">
+            <label title="Para aparecer no mapa de jogos. Usa Google Maps → clica com o botão direito → 'O que existe aqui?' para obter as coordenadas.">
+              Latitude (GPS) <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 400 }}>para o mapa</span>
+              <input type="number" step="0.000001" min="-90" max="90" placeholder="Ex: 38.716773"
+                     value={form.latitude} onChange={e => set('latitude', e.target.value)} />
+            </label>
+            <label>
+              Longitude (GPS)
+              <input type="number" step="0.000001" min="-180" max="180" placeholder="Ex: -9.142661"
+                     value={form.longitude} onChange={e => set('longitude', e.target.value)} />
+            </label>
+          </div>
           <label>Preço por hora (€)
             <input type="number" min="0" step="0.50"
                    value={(form.precoHoraCents || 0) / 100}

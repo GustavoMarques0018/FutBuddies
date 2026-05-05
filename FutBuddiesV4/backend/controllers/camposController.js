@@ -111,7 +111,7 @@ async function editarCampo(req, res) {
 
     const {
       nome, fotoUrl, tipoPiso, morada, regiao, precoHoraCents, duracaoMin, ativo,
-      horaAbertura, horaFecho, diasSemana, slotMin, lotacoes,
+      horaAbertura, horaFecho, diasSemana, slotMin, lotacoes, latitude, longitude,
     } = req.body;
     await query(
       `UPDATE campos SET
@@ -120,6 +120,8 @@ async function editarCampo(req, res) {
          tipo_piso = COALESCE(@tipo, tipo_piso),
          morada = COALESCE(@morada, morada),
          regiao = COALESCE(@regiao, regiao),
+         latitude = CASE WHEN @lat IS NOT NULL THEN @lat ELSE latitude END,
+         longitude = CASE WHEN @lng IS NOT NULL THEN @lng ELSE longitude END,
          preco_hora_cents = COALESCE(@preco, preco_hora_cents),
          duracao_min = COALESCE(@dur, duracao_min),
          ativo = COALESCE(@ativo, ativo),
@@ -133,6 +135,8 @@ async function editarCampo(req, res) {
       { id,
         nome: nome || null, foto: fotoUrl || null, tipo: tipoPiso || null,
         morada: morada || null, regiao: regiao || null,
+        lat: latitude != null && latitude !== '' ? parseFloat(latitude) : null,
+        lng: longitude != null && longitude !== '' ? parseFloat(longitude) : null,
         preco: precoHoraCents != null ? parseInt(precoHoraCents) : null,
         dur: duracaoMin != null ? parseInt(duracaoMin) : null,
         ativo: ativo == null ? null : (ativo ? 1 : 0),

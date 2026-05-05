@@ -9,11 +9,32 @@ import api from '../utils/api';
 import { IconBall, IconTrophy, IconCalendar, IconCrown } from './Icons';
 import './HistoricoPerfil.css';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 function formatarMes(ym) {
   // ym = "2026-04"
   const [y, m] = ym.split('-');
   const nomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   return `${nomes[parseInt(m)-1]} ${y.slice(2)}`;
+}
+
+async function descarregarCSV() {
+  try {
+    const token = localStorage.getItem('fb_token') || sessionStorage.getItem('fb_token');
+    const resp = await fetch(`${API_BASE}/utilizadores/me/historico/csv`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) throw new Error('Erro ao descarregar CSV');
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `historico-futbuddies-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    alert('Não foi possível gerar o ficheiro CSV. Tenta novamente.');
+  }
 }
 
 export default function HistoricoPerfil() {
@@ -44,6 +65,19 @@ export default function HistoricoPerfil() {
 
   return (
     <div className="historico-wrap">
+      {/* Barra de acções */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={descarregarCSV}
+          title="Exportar histórico em formato CSV"
+          style={{ fontSize: '0.82rem', gap: '0.35rem', display: 'inline-flex', alignItems: 'center' }}
+        >
+          📥 Exportar CSV
+        </button>
+      </div>
+
       {/* Totais destaque */}
       <div className="historico-kpis">
         <div className="historico-kpi"><IconBall size="1.3rem" color="var(--primary)" />
