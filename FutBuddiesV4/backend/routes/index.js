@@ -22,6 +22,7 @@ const suporteCtrl      = require('../controllers/suporteController');
 const avalCampoCtrl    = require('../controllers/avaliacoesCampoController');
 const testeCtrl        = require('../controllers/testeController');
 const { upload, uploadImagem } = require('../controllers/uploadController');
+const avalJogCtrl = require('../controllers/avaliacoesJogadoresController');
 
 // ── AUTH ──────────────────────────────────────────────────
 router.post('/auth/registar', authCtrl.registar);
@@ -50,8 +51,9 @@ router.put('/utilizadores/perfil',     autenticar, utilizadoresCtrl.updatePerfil
 router.put('/utilizadores/password',   autenticar, utilizadoresCtrl.alterarPassword);
 router.delete('/utilizadores/conta',   autenticar, utilizadoresCtrl.eliminarConta);
 router.get('/utilizadores/me/equipa',  autenticar, equipasCtrl.getEquipaDoUtilizador);
-router.get('/utilizadores/me/meus-jogos', autenticar, utilizadoresCtrl.getMeusJogos);
-router.get('/utilizadores/me/historico',  autenticar, utilizadoresCtrl.getHistorico);
+router.get('/utilizadores/me/meus-jogos',     autenticar, utilizadoresCtrl.getMeusJogos);
+router.get('/utilizadores/me/historico',      autenticar, utilizadoresCtrl.getHistorico);
+router.get('/utilizadores/me/historico/csv',  autenticar, utilizadoresCtrl.getHistoricoCSV);
 router.get('/jogadores/:id',           autenticarOpcional, utilizadoresCtrl.getPerfilPublico);
 
 // ── EQUIPAS ───────────────────────────────────────────────
@@ -140,6 +142,11 @@ router.post('/jogos/:jogoId/avaliar-campo',    autenticar, avalCampoCtrl.submete
 const mvpCtrl = require('../controllers/mvpController');
 router.get ('/jogos/:id/mvp',  autenticar, mvpCtrl.getVotacao);
 router.post('/jogos/:id/mvp',  autenticar, mvpCtrl.votar);
+
+// ── Avaliações entre jogadores ───────────────────────────
+router.get ('/jogos/:id/avaliar-jogadores', autenticar, avalJogCtrl.getJogadoresParaAvaliar);
+router.post('/jogos/:id/avaliar-jogadores', autenticar, avalJogCtrl.submeterAvaliacoes);
+router.get ('/jogadores/:id/avaliacoes',    autenticarOpcional, avalJogCtrl.getAvaliacoesPerfil);
 
 // ── Sorteio de equipas ───────────────────────────────────
 const sorteioCtrl = require('../controllers/sorteioController');

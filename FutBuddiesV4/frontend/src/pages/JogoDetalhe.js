@@ -17,6 +17,7 @@ import CodigoAcesso from '../components/CodigoAcesso';
 import PagamentoJogo from '../components/PagamentoJogo';
 import MVPVoting from '../components/MVPVoting';
 import SorteioEquipas from '../components/SorteioEquipas';
+import AvaliarJogadores from '../components/AvaliarJogadores';
 import DatePickerFB from '../components/DatePickerFB';
 import Avatar from '../components/Avatar';
 import './Jogos.css';
@@ -44,6 +45,7 @@ export default function JogoDetalhe() {
   const [minhaEquipa, setMinhaEquipa] = useState(null);
   const [inscEquipaLoading, setInscEquipaLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [mostrarAvaliacao, setMostrarAvaliacao] = useState(false);
   const chatRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -467,15 +469,27 @@ export default function JogoDetalhe() {
           </div>
         )}
 
-        {/* MVP Voting — visível após o jogo encerrar, a participantes */}
+        {/* MVP Voting + Avaliações — visível após o jogo encerrar, a participantes */}
         {encerrado && isAuthenticated && (inscrito || isCriador || (isTeamGame && minhaEquipaInscrita)) && (
-          <div style={{ marginTop: '1rem' }}>
+          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <MVPVoting jogoId={id} utilizadorId={utilizador?.id} />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setMostrarAvaliacao(true)}
+              style={{ alignSelf: 'flex-start', gap: '0.4rem', display: 'inline-flex', alignItems: 'center' }}
+            >
+              ⭐ Avaliar Jogadores
+            </button>
           </div>
         )}
 
         {mostrarSorteio && (
           <SorteioEquipas jogoId={id} onClose={() => setMostrarSorteio(false)} />
+        )}
+
+        {mostrarAvaliacao && (
+          <AvaliarJogadores jogoId={id} onFechar={() => setMostrarAvaliacao(false)} />
         )}
 
         {/* Progresso */}

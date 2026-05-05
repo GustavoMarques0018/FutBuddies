@@ -2,7 +2,7 @@
 //  FutBuddies - Pagina de Jogos (v3 — search, filter chips, game state)
 // ============================================================
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,6 +11,9 @@ import { REGIOES, NIVEIS, NIVEL_COR, getRegiaoGuardada, guardarRegiao } from '..
 import { IconBall, IconLock, IconStadium, IconMapPin, IconClock } from '../components/Icons';
 import Countdown from '../components/Countdown';
 import './Jogos.css';
+
+// Carregamento dinâmico do mapa (evita carregar Leaflet se nunca abrir)
+const JogosMapa = lazy(() => import('../components/JogosMapa'));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -141,6 +144,9 @@ export default function Jogos() {
   const [regiao, setRegiao] = useState(getRegiaoGuardada);
   const [ordenacao, setOrdenacao] = useState('data');
 
+  // Vista: 'lista' | 'mapa'
+  const [vista, setVista] = useState('lista');
+
   // ?filtro=meus → mostra só jogos do utilizador
   const [searchParams, setSearchParams] = useSearchParams();
   const meusJogos = searchParams.get('filtro') === 'meus';
@@ -236,7 +242,24 @@ export default function Jogos() {
             <h1>Jogos</h1>
             <p>Encontra um jogo ou cria o teu proprio</p>
           </div>
-          {isAuthenticated && <Link to="/jogos/criar" className="btn btn-primary">+ Criar Jogo</Link>}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {/* Alternar vista lista / mapa */}
+            <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+              {[['lista','☰ Lista'], ['mapa','🗺️ Mapa']].map(([v, l]) => (
+                <button key={v} type="button"
+                  onClick={() => setVista(v)}
+                  style={{
+                    padding: '0.45rem 0.85rem', fontSize: '0.8rem', fontWeight: 600,
+                    background: vista === v ? 'var(--primary)' : 'transparent',
+                    color: vista === v ? '#050505' : 'var(--text-muted)',
+                    border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                  }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            {isAuthenticated && <Link to="/jogos/criar" className="btn btn-primary">+ Criar Jogo</Link>}
+          </div>
         </div>
 
         {/* ── Live Games Banner ── */}
@@ -321,7 +344,11 @@ export default function Jogos() {
         </div>
 
         {/* ── Content ── */}
-        {loading ? (
+        {vista === 'mapa' ? (
+          <Suspense fallback={<div className="jogos-loading"><div className="spinner" /></div>}>
+            <JogosMapa jogos={jogosProcessados} />
+          </Suspense>
+        ) : loading ? (
           <div className="jogos-loading"><div className="spinner" /></div>
         ) : jogosOrdenados.length === 0 && jogosADecorrer.length === 0 ? (
           <div className="empty-state">

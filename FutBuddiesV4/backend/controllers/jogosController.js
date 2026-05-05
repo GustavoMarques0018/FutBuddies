@@ -52,8 +52,9 @@ async function listarJogos(req, res) {
     const resultado = await query(
       `SELECT j.id, j.titulo, j.descricao, j.data_jogo, j.regiao, j.tipo_jogo, j.nivel,
               j.max_jogadores, j.estado, j.visibilidade, j.modo_jogo, j.created_at,
-              -- Local só exposto em jogos públicos
+              -- Local e coordenadas só expostos em jogos públicos
               CASE WHEN j.visibilidade='publico' THEN j.local ELSE NULL END AS local,
+              j.latitude, j.longitude,
               u.nome AS criador_nome,
               CASE WHEN j.modo_jogo = 'equipa'
                 THEN ISNULL((SELECT COUNT(*) FROM inscricoes_equipa ie2 WHERE ie2.jogo_id = j.id AND ie2.estado = 'confirmado'), 0) * (j.max_jogadores / 2)
@@ -67,7 +68,8 @@ async function listarJogos(req, res) {
        LEFT JOIN utilizadores u ON j.criador_id=u.id
        LEFT JOIN inscricoes i ON j.id=i.jogo_id
        ${where}
-       GROUP BY j.id, j.titulo, j.descricao, j.data_jogo, j.local, j.regiao, j.tipo_jogo, j.nivel,
+       GROUP BY j.id, j.titulo, j.descricao, j.data_jogo, j.local, j.latitude, j.longitude,
+                j.regiao, j.tipo_jogo, j.nivel,
                 j.max_jogadores, j.estado, j.visibilidade, j.modo_jogo, j.created_at, u.nome
        ORDER BY j.data_jogo ASC
        OFFSET @offset ROWS FETCH NEXT @limite ROWS ONLY`, params
@@ -270,19 +272,22 @@ async function criarJogo(req, res) {
 
     const localFinal = tipoLocal === 'parceiro' ? (campoInfo.morada || campoInfo.nome) : (local || null);
     const regiaoFinal = tipoLocal === 'parceiro' && !regiao ? campoInfo.regiao : (regiao || null);
+    // Herda coordenadas do campo parceiro (se tiver) ou aceita valores do form
+    const latFinal  = (tipoLocal === 'parceiro' && campoInfo.latitude)  ? campoInfo.latitude  : (req.body.latitude  || null);
+    const lngFinal  = (tipoLocal === 'parceiro' && campoInfo.longitude) ? campoInfo.longitude : (req.body.longitude || null);
 
     const resultado = await query(
       `INSERT INTO jogos (titulo, descricao, data_jogo, local, regiao, tipo_jogo, max_jogadores, estado,
                           visibilidade, nivel, codigo_acesso, modo_jogo, criador_id,
                           tipo_local, campo_id, modelo_pagamento, preco_total_cents,
                           preco_por_jogador_cents, reserva_estado, deadline_pagamento,
-                          formato_lotacao,
+                          formato_lotacao, latitude, longitude,
                           created_at, updated_at)
        OUTPUT INSERTED.id
        VALUES (@titulo, @descricao, @dataJogo, @local, @regiao, @tipoJogo, @maxJogadores, 'aberto',
                @visibilidade, @nivel, @codigoAcesso, @modoJogo, @criadorId,
                @tipoLocal, @campoId, @modeloPag, @precoTot, @precoJog, @resEstado, @deadline,
-               @formatoLot,
+               @formatoLot, @lat, @lng,
                GETUTCDATE(), GETUTCDATE())`,
       { titulo, descricao: descricao||null, dataJogo: new Date(dataJogo), local: localFinal,
         regiao: regiaoFinal, tipoJogo, maxJogadores: parseInt(maxJogadores),
@@ -291,6 +296,8 @@ async function criarJogo(req, res) {
         modeloPag: tipoLocal === 'parceiro' ? modeloPagamento : null,
         precoTot: tipoLocal === 'parceiro' ? parseInt(precoTotalCents || campoInfo.preco_hora_cents) : null,
         precoJog: precoPorJogador,
+        lat: latFinal ? parseFloat(latFinal) : null,
+        lng: lngFinal ? parseFloat(lngFinal) : null,
         resEstado: reservaEstado, deadline,
         formatoLot: tipoLocal === 'parceiro' ? parseInt(formatoLotacao) : null }
     );

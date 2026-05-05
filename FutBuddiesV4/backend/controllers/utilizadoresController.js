@@ -20,6 +20,22 @@ async function temColunaPerfilPublico() {
   return _perfilPublicoCache;
 }
 
+// Helper: referral_code (migration aplicada?)
+let _referralCodeCache = null;
+async function temColunaReferralCode() {
+  if (_referralCodeCache !== null) return _referralCodeCache;
+  try {
+    const r = await query(
+      `SELECT 1 AS ok FROM sys.columns
+        WHERE object_id = OBJECT_ID('utilizadores') AND name = 'referral_code'`
+    );
+    _referralCodeCache = r.recordset.length > 0;
+  } catch {
+    _referralCodeCache = false;
+  }
+  return _referralCodeCache;
+}
+
 // Helper: user_role (migration v9 aplicada?)
 let _userRoleCache = null;
 async function temColunaUserRole() {
@@ -41,6 +57,7 @@ async function getPerfil(req, res) {
   try {
     const temPP = await temColunaPerfilPublico();
     const temUR = await temColunaUserRole();
+    const temRC = await temColunaReferralCode();
     const cols = `id, nome, email, role, ${temUR ? 'user_role,' : ''} nickname, posicao, pe_preferido, regiao, cidade, bio, foto_url,
                   total_jogos, total_golos, total_assistencias,
                   COALESCE(total_mvp, 0)       AS total_mvp,
@@ -49,7 +66,7 @@ async function getPerfil(req, res) {
                   COALESCE(total_empates, 0)   AS total_empates,
                   ${temPP ? 'perfil_publico,' : ''}
                   COALESCE(receber_emails, 1) AS receber_emails,
-                  referral_code,
+                  ${temRC ? 'referral_code,' : ''}
                   created_at, ultimo_login`;
     const resultado = await query(
       `SELECT ${cols} FROM utilizadores WHERE id = @id`,
@@ -60,6 +77,7 @@ async function getPerfil(req, res) {
     const u = resultado.recordset[0];
     if (!temPP) u.perfil_publico = 1; // default
     if (!temUR) u.user_role = 'PLAYER'; // default
+    if (!temRC) u.referral_code = null; // coluna ainda não existe
     res.json({ sucesso: true, utilizador: u });
   } catch (err) {
     console.error('[Perfil] getPerfil erro:', err);
@@ -468,4 +486,63 @@ async function getHistorico(req, res) {
   }
 }
 
-module.exports = { getPerfil, updatePerfil, alterarPassword, eliminarConta, getPerfilPublico, getDashboard, getUtilizadores, getTodosJogos, updateRole, toggleAtivo, getMeusJogos, getHistorico };
+// GET /api/utilizadores/me/historico/csv — download CSV do histórico de jogos
+async function getHistoricoCSV(req, res) {
+  try {
+    const uid = req.utilizador.id;
+
+    const r = await query(
+      `SELECT j.titulo, j.data_jogo, j.local, j.regiao, j.tipo_jogo,
+              ISNULL(rp.golos, 0) AS golos,
+              ISNULL(rp.assistencias, 0) AS assistencias,
+              r.golos_equipa_a, r.golos_equipa_b
+         FROM jogos j
+         JOIN (
+            SELECT jogo_id FROM inscricoes WHERE utilizador_id=@uid AND estado='confirmado'
+            UNION
+            SELECT ie.jogo_id FROM inscricoes_equipa ie
+              JOIN equipa_membros em ON em.equipa_id = ie.equipa_id
+             WHERE em.utilizador_id=@uid AND ie.estado='confirmado'
+         ) p ON p.jogo_id = j.id
+         LEFT JOIN resultado_pessoal rp ON rp.jogo_id = j.id AND rp.utilizador_id = @uid
+         LEFT JOIN resultado_jogo r ON r.jogo_id = j.id
+        WHERE DATEADD(HOUR, 1, j.data_jogo) < GETUTCDATE()
+          AND j.estado <> 'cancelado'
+        ORDER BY j.data_jogo DESC`,
+      { uid }
+    );
+
+    const escape = (v) => {
+      if (v == null) return '';
+      const s = String(v);
+      if (s.includes(',') || s.includes('"') || s.includes('\n'))
+        return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+
+    const linhas = [
+      'Data,Título,Local,Região,Tipo,Golos,Assistências,Placar',
+      ...r.recordset.map(j => [
+        j.data_jogo ? new Date(j.data_jogo).toLocaleDateString('pt-PT') : '',
+        escape(j.titulo),
+        escape(j.local),
+        escape(j.regiao),
+        escape(j.tipo_jogo),
+        j.golos,
+        j.assistencias,
+        j.golos_equipa_a != null ? `${j.golos_equipa_a}-${j.golos_equipa_b}` : 'N/A',
+      ].join(',')),
+    ];
+
+    const nome = `historico-futbuddies-${new Date().toISOString().slice(0,10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${nome}"`);
+    // BOM UTF-8 para Excel reconhecer acentos
+    res.send('﻿' + linhas.join('\r\n'));
+  } catch (err) {
+    console.error('[Perfil] getHistoricoCSV erro:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro ao gerar CSV.' });
+  }
+}
+
+module.exports = { getPerfil, updatePerfil, alterarPassword, eliminarConta, getPerfilPublico, getDashboard, getUtilizadores, getTodosJogos, updateRole, toggleAtivo, getMeusJogos, getHistorico, getHistoricoCSV };
