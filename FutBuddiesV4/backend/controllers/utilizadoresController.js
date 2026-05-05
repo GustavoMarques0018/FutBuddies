@@ -42,8 +42,14 @@ async function getPerfil(req, res) {
     const temPP = await temColunaPerfilPublico();
     const temUR = await temColunaUserRole();
     const cols = `id, nome, email, role, ${temUR ? 'user_role,' : ''} nickname, posicao, pe_preferido, regiao, cidade, bio, foto_url,
-                  total_jogos, total_golos, total_assistencias, ${temPP ? 'perfil_publico,' : ''}
+                  total_jogos, total_golos, total_assistencias,
+                  COALESCE(total_mvp, 0)       AS total_mvp,
+                  COALESCE(total_vitorias, 0)  AS total_vitorias,
+                  COALESCE(total_derrotas, 0)  AS total_derrotas,
+                  COALESCE(total_empates, 0)   AS total_empates,
+                  ${temPP ? 'perfil_publico,' : ''}
                   COALESCE(receber_emails, 1) AS receber_emails,
+                  referral_code,
                   created_at, ultimo_login`;
     const resultado = await query(
       `SELECT ${cols} FROM utilizadores WHERE id = @id`,

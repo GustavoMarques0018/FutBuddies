@@ -421,6 +421,25 @@ async function iniciar() {
       console.warn('⚠️  Falha migração receber_emails:', e.message);
     }
 
+    // Migração: referral_code + referido_por (sistema de convites)
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.utilizadores','referral_code') IS NULL
+          ALTER TABLE dbo.utilizadores ADD referral_code NVARCHAR(20) NULL;
+        IF COL_LENGTH('dbo.utilizadores','referido_por') IS NULL
+          ALTER TABLE dbo.utilizadores ADD referido_por INT NULL;
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='UQ_referral_code')
+          CREATE UNIQUE INDEX UQ_referral_code ON dbo.utilizadores(referral_code) WHERE referral_code IS NOT NULL;
+        -- Backfill: gera codigo deterministico para utilizadores existentes (UPPER(LEFT(nome,4)) + id)
+        UPDATE dbo.utilizadores
+           SET referral_code = UPPER(LEFT(REPLACE(REPLACE(nome,' ',''),'-',''), 4)) + CAST(id AS NVARCHAR(10))
+         WHERE referral_code IS NULL;
+      `);
+      console.log('✅ referral_code + referido_por garantidos');
+    } catch (e) {
+      console.warn('⚠️  Falha migração referrals:', e.message);
+    }
+
     // Migração: remover CHECK constraint em inscricoes.estado (para permitir 'espera')
     try {
       await pool.request().query(`

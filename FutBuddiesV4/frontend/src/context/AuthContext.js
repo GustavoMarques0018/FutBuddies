@@ -53,8 +53,8 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
-  const registar = useCallback(async (nome, email, password) => {
-    const res = await api.post('/auth/registar', { nome, email, password });
+  const registar = useCallback(async (nome, email, password, referralCode = null) => {
+    const res = await api.post('/auth/registar', { nome, email, password, referralCode });
     const { accessToken, refreshToken, utilizador: user } = res.data;
     setToken('accessToken', accessToken, true);
     setToken('refreshToken', refreshToken, true);

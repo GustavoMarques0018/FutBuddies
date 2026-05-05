@@ -12,6 +12,7 @@ import ImageUpload from '../components/ImageUpload';
 import Emblema from '../components/Emblema';
 import HistoricoPerfil from '../components/HistoricoPerfil';
 import Conquistas from '../components/Conquistas';
+import NivelCard from '../components/NivelCard';
 import Carteira from '../components/Carteira';
 import PushToggle from '../components/PushToggle';
 import './Perfil.css';
@@ -179,8 +180,13 @@ export default function Perfil() {
 
         {/* ── ABA PERFIL ── */}
         {abaAtiva === 'perfil' && (
-          <div className="card">
-            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}>Editar Informação</h2>
+          <>
+            {/* Nível e XP — sempre visível no topo da aba Perfil */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <NivelCard utilizador={perfil} />
+            </div>
+            <div className="card">
+              <h2 style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}>Editar Informação</h2>
             <form onSubmit={handleSalvar} className="perfil-form">
               <div className="grid-2">
                 <div className="form-field">
@@ -287,7 +293,8 @@ export default function Perfil() {
                 {guardando ? 'A guardar...' : 'Guardar Alterações'}
               </button>
             </form>
-          </div>
+            </div>
+          </>
         )}
 
         {/* ── ABA CONTA ── */}
@@ -311,6 +318,50 @@ export default function Perfil() {
 
         {abaAtiva === 'conta' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Convidar Amigos */}
+            {perfil?.referral_code && (
+              <div className="card" style={{ padding: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.4rem' }}>🎁</span>
+                  <div>
+                    <strong>Convida amigos</strong>
+                    <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.1rem' }}>
+                      Partilha o teu link. Cada amigo que se inscrever ajuda a comunidade a crescer.
+                    </div>
+                  </div>
+                </div>
+                {(() => {
+                  const link = `${window.location.origin}/registar?via=${perfil.referral_code}`;
+                  return (
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                      <input
+                        readOnly
+                        value={link}
+                        onFocus={(e) => e.target.select()}
+                        style={{ flex: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}
+                      />
+                      <button type="button" className="btn btn-primary" style={{ flexShrink: 0 }}
+                        onClick={async () => {
+                          try {
+                            if (navigator.share) {
+                              await navigator.share({ title: 'FutBuddies', text: 'Junta-te a mim no FutBuddies!', url: link });
+                            } else {
+                              await navigator.clipboard.writeText(link);
+                              addToast('Link copiado! 📋', 'success');
+                            }
+                          } catch { /* user cancelou share */ }
+                        }}>
+                        {typeof navigator !== 'undefined' && navigator.share ? '📤 Partilhar' : '📋 Copiar'}
+                      </button>
+                    </div>
+                  );
+                })()}
+                <div className="muted" style={{ fontSize: '0.7rem', marginTop: '0.5rem', textAlign: 'right' }}>
+                  Código: <strong style={{ color: 'var(--primary)' }}>{perfil.referral_code}</strong>
+                </div>
+              </div>
+            )}
 
             {/* Notificações Push */}
             <div className="card" style={{ padding: '1.25rem' }}>
