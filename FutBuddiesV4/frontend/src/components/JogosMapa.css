@@ -122,6 +122,9 @@
 }
 .leg-dot.aberto { background: #39d353; }
 .leg-dot.cheio  { background: #e05c00; }
+.leg-info       { color: var(--text-muted); font-size: 0.73rem; opacity: 0.8; }
+
+.jmp-fallback { color: var(--text-muted); font-size: 0.75em; }
 
 /* ── Estado vazio ── */
 .jogos-mapa-vazio {

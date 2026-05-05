@@ -84,14 +84,49 @@ function formatarData(d) {
   });
 }
 
+// ── Coordenadas aproximadas por região (fallback sem GPS) ──
+const COORDS_REGIAO = {
+  'Lisboa':            [38.7167, -9.1333],
+  'Porto':             [41.1496, -8.6109],
+  'Braga':             [41.5454, -8.4265],
+  'Coimbra':           [40.2111, -8.4291],
+  'Aveiro':            [40.6405, -8.6538],
+  'Leiria':            [39.7436, -8.8071],
+  'Setúbal':           [38.5244, -8.8882],
+  'Faro':              [37.0194, -7.9322],
+  'Évora':             [38.5711, -7.9076],
+  'Viseu':             [40.6566, -7.9122],
+  'Viana do Castelo':  [41.6932, -8.8334],
+  'Bragança':          [41.8061, -6.7589],
+  'Guarda':            [40.5364, -7.2683],
+  'Castelo Branco':    [39.8222, -7.4910],
+  'Santarém':          [39.2365, -8.6877],
+  'Portalegre':        [39.2967, -7.4285],
+  'Beja':              [38.0154, -7.8633],
+  'Odivelas':          [38.7955, -9.1852],
+  'Sintra':            [38.8029, -9.3817],
+  'Amadora':           [38.7566, -9.2244],
+  'Almada':            [38.6761, -9.1594],
+  'Cascais':           [38.6979, -9.4215],
+  'Oeiras':            [38.6940, -9.3054],
+  'Loures':            [38.8312, -9.1683],
+  'Vila Nova de Gaia': [41.1239, -8.6118],
+  'Matosinhos':        [41.1785, -8.6901],
+  'Gondomar':          [41.1467, -8.5363],
+  'Maia':              [41.2297, -8.6204],
+  'Valongo':           [41.1945, -8.4948],
+};
+
 export default function JogosMapa({ jogos = [] }) {
-  // Filtra só jogos com coordenadas (campo tem lat/lng no futuro)
-  // Por enquanto geocodificamos a partir do campo se disponível,
-  // ou usamos coordenadas aproximadas por região.
+  // Usa coordenadas do jogo → campo → fallback por região
   const jogosComCoords = useMemo(() => {
     return jogos
       .filter(j => j.estado !== 'cancelado' && j.estado !== 'concluido')
-      .map(j => ({ ...j, lat: j.latitude || j.campo_lat, lng: j.longitude || j.campo_lng }))
+      .map(j => {
+        const lat = j.latitude  || j.campo_lat  || COORDS_REGIAO[j.regiao]?.[0];
+        const lng = j.longitude || j.campo_lng  || COORDS_REGIAO[j.regiao]?.[1];
+        return { ...j, lat, lng, coordFallback: !j.latitude && !j.campo_lat };
+      })
       .filter(j => j.lat && j.lng);
   }, [jogos]);
 
@@ -138,7 +173,9 @@ export default function JogosMapa({ jogos = [] }) {
                 <span className="jmp-tipo">{jogo.tipo_jogo || '—'}</span>
               </div>
               <h4 className="jmp-titulo">{jogo.titulo}</h4>
-              <p className="jmp-detalhe">📍 {jogo.local || jogo.regiao}</p>
+              <p className="jmp-detalhe">📍 {jogo.local || jogo.regiao}
+                {jogo.coordFallback && <span className="jmp-fallback"> (aprox.)</span>}
+              </p>
               <p className="jmp-detalhe">🕐 {formatarData(jogo.data_jogo)}</p>
               {jogo.max_jogadores && (
                 <p className="jmp-detalhe">
@@ -156,6 +193,9 @@ export default function JogosMapa({ jogos = [] }) {
       <div className="jogos-mapa-legenda">
         <span><span className="leg-dot aberto" />Aberto ({jogosComCoords.filter(j => j.estado === 'aberto').length})</span>
         <span><span className="leg-dot cheio" />Cheio ({jogosComCoords.filter(j => j.estado !== 'aberto').length})</span>
+        {jogosComCoords.some(j => j.coordFallback) && (
+          <span className="leg-info" title="Coordenadas aproximadas por região">📌 Posição aproximada</span>
+        )}
       </div>
     </div>
   );

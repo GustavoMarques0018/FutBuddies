@@ -89,12 +89,11 @@ async function uploadImagem(req, res) {
       // Multer Cloudinary devolve req.file.path como URL HTTPS final.
       url = req.file.path;
     } else {
-      // Disco: devolve URL absoluta em produção, relativa em dev.
-      const baseUrl = process.env.PUBLIC_BASE_URL
-        || (process.env.NODE_ENV === 'production'
-            ? `${req.protocol}://${req.get('host')}`
-            : '');
-      url = `${baseUrl}/uploads/${req.file.filename}`;
+      // Disco: guarda SEMPRE o caminho relativo /uploads/... para que
+      // resolverImgUrl() no frontend possa reconstruir a URL correcta
+      // independentemente do host (evita guardar "localhost:5000" em dev
+      // ou o host do Render em produção, o que quebraria após redeploy).
+      url = `/uploads/${req.file.filename}`;
     }
 
     res.json({ sucesso: true, url, mensagem: 'Imagem carregada com sucesso!' });

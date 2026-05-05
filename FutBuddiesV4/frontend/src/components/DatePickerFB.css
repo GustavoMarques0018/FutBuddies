@@ -52,9 +52,9 @@
   overflow-y: auto;
 }
 
-/* Calendar inside portal: limit its size */
+/* Calendar inside portal: wide enough for month (≈280px) + time (90px) side by side */
 .react-datepicker__portal .react-datepicker {
-  max-width: min(380px, calc(100vw - 2rem));
+  max-width: min(490px, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   margin: auto;
@@ -70,7 +70,9 @@
   box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px var(--primary-soft) !important;
   font-family: inherit !important;
   color: var(--text) !important;
-  overflow: hidden;
+  /* overflow:hidden clips the float-positioned time container when width is tight;
+     use overflow:auto so the calendar grows to contain both month+time floats */
+  overflow: auto;
 }
 
 /* ── Header (mês + setas + dias da semana) ───────────────── */
