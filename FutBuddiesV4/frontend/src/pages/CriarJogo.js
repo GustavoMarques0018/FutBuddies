@@ -2,7 +2,7 @@
 //  FutBuddies - Criar Jogo (v2 — público/privado + região)
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -15,6 +15,9 @@ import {
 import TimeSlotPicker from '../components/TimeSlotPicker';
 import DatePickerFB from '../components/DatePickerFB';
 import './CriarJogo.css';
+
+// Importado lazily — Leaflet só carrega quando o utilizador abre o picker
+const MapaPinPicker = lazy(() => import('../components/MapaPinPicker'));
 
 function parseArr(raw, fallback) {
   if (Array.isArray(raw)) return raw;
@@ -42,7 +45,9 @@ export default function CriarJogo() {
     formatoLotacao: null,
     modeloPagamento: '', precoTotalCents: 0,
     recorrencia: null, recorrenciaOcorrencias: 0,
+    latitude: null, longitude: null,
   });
+  const [mostrarMapaPicker, setMostrarMapaPicker] = useState(false);
   const [campos, setCampos] = useState([]);
 
   // Se chegou via ?campoId= sem região, carrega esse campo directamente
@@ -412,9 +417,58 @@ export default function CriarJogo() {
                   </span>
                 )}
               </label>
-              <input type="text" placeholder="Ex: Campo do Bairro, Rua das Flores 10" value={form.local}
-                onChange={e => setForm({ ...form, local: e.target.value })} />
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                <input
+                  type="text"
+                  placeholder="Ex: Campo do Bairro, Rua das Flores 10"
+                  value={form.local}
+                  onChange={e => setForm({ ...form, local: e.target.value })}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setMostrarMapaPicker(true)}
+                  title="Marcar localização exacta no mapa"
+                  style={{ flexShrink: 0, padding: '0 0.85rem', fontSize: '1.1rem' }}
+                >
+                  📍
+                </button>
+              </div>
+              {/* Indicador quando há pin colocado */}
+              {form.latitude && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>📌</span>
+                  <span>Pin exacto: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, latitude: null, longitude: null }))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem', textDecoration: 'underline', padding: 0 }}
+                  >
+                    remover
+                  </button>
+                </p>
+              )}
             </div>
+            )}
+
+            {/* Modal do picker de pin — lazy loaded */}
+            {mostrarMapaPicker && (
+              <Suspense fallback={<div style={{ display:'flex', justifyContent:'center', padding:'2rem' }}><div className="spinner" /></div>}>
+                <MapaPinPicker
+                  regiao={form.regiao}
+                  posInicial={form.latitude ? [form.latitude, form.longitude] : null}
+                  onCancelar={() => setMostrarMapaPicker(false)}
+                  onConfirmar={(coords) => {
+                    setForm(f => ({
+                      ...f,
+                      latitude:  coords?.lat ?? null,
+                      longitude: coords?.lng ?? null,
+                    }));
+                    setMostrarMapaPicker(false);
+                  }}
+                />
+              </Suspense>
             )}
 
             {/* Nível */}
