@@ -42,8 +42,9 @@ router.post('/jogos/:id/checkin',     autenticar, jogosCtrl.checkin);
 router.delete('/jogos/:id',           autenticar, isAdmin, jogosCtrl.eliminarJogo);
 
 // ── CHAT ──────────────────────────────────────────────────
-router.get('/jogos/:id/chat',  autenticar, chatCtrl.getMensagens);
-router.post('/jogos/:id/chat', autenticar, chatCtrl.enviarMensagem);
+router.get('/jogos/:id/chat',                    autenticar, chatCtrl.getMensagens);
+router.post('/jogos/:id/chat',                   autenticar, chatCtrl.enviarMensagem);
+router.post('/jogos/:id/chat/:msgId/reacao',     autenticar, chatCtrl.toggleReacao);
 
 // ── UTILIZADORES ──────────────────────────────────────────
 router.get('/utilizadores/perfil',     autenticar, utilizadoresCtrl.getPerfil);

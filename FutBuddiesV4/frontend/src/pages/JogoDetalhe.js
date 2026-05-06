@@ -2,12 +2,11 @@
 //  FutBuddies - Detalhe do Jogo + Chat (WebSocket)
 // ============================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { useToast } from '../components/Toast';
-import { io } from 'socket.io-client';
 import { REGIOES, NIVEIS, NIVEL_COR, resolverImgUrl } from '../utils/constantes';
 import {
   IconCrown, IconPencil, IconMapPin, IconClock, IconUser, IconLock,
@@ -18,6 +17,7 @@ import PagamentoJogo from '../components/PagamentoJogo';
 import MVPVoting from '../components/MVPVoting';
 import SorteioEquipas from '../components/SorteioEquipas';
 import AvaliarJogadores from '../components/AvaliarJogadores';
+import Chat from '../components/Chat';
 import DatePickerFB from '../components/DatePickerFB';
 import Avatar from '../components/Avatar';
 import './Jogos.css';
@@ -35,10 +35,6 @@ export default function JogoDetalhe() {
   const [inscricaoLoading, setInscricaoLoading] = useState(false);
   const [equipaEscolhida, setEquipaEscolhida] = useState(null); // null = auto
   const [codigoAcesso, setCodigoAcesso] = useState('');
-  const [mensagens, setMensagens] = useState([]);
-  const [novaMensagem, setNovaMensagem] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [socketLigado, setSocketLigado] = useState(false);
   const [editando, setEditando] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [editLoading, setEditLoading] = useState(false);
@@ -46,9 +42,6 @@ export default function JogoDetalhe() {
   const [inscEquipaLoading, setInscEquipaLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [mostrarAvaliacao, setMostrarAvaliacao] = useState(false);
-  const chatRef = useRef(null);
-  const socketRef = useRef(null);
-
   const carregarJogo = () => {
     api.get(`/jogos/${id}`)
       .then(res => {
@@ -67,45 +60,13 @@ export default function JogoDetalhe() {
       .catch(() => {});
   };
 
-  const carregarMensagens = () => {
-    if (!isAuthenticated) return;
-    api.get(`/jogos/${id}/chat`)
-      .then(res => setMensagens(res.data.mensagens || []))
-      .catch(() => {});
-  };
-
   useEffect(() => {
     carregarJogo();
-    carregarMensagens();
     carregarResultado();
     if (isAuthenticated) {
       api.get('/utilizadores/me/equipa').then(res => setMinhaEquipa(res.data.equipa)).catch(() => {});
     }
-    if (!isAuthenticated) return;
-    const token = localStorage.getItem('accessToken');
-    const socketUrl = process.env.REACT_APP_API_URL
-      ? process.env.REACT_APP_API_URL.replace('/api', '')
-      : 'http://localhost:5000';
-    const socket = io(socketUrl, { auth: { token }, transports: ['websocket', 'polling'] });
-    socketRef.current = socket;
-    socket.on('connect', () => { setSocketLigado(true); socket.emit('entrar_jogo', parseInt(id)); });
-    socket.on('disconnect', () => setSocketLigado(false));
-    socket.on('nova_mensagem', (msg) => {
-      setMensagens(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
-    });
-    socket.on('connect_error', () => setSocketLigado(false));
-    return () => { socket.emit('sair_jogo', parseInt(id)); socket.disconnect(); };
   }, [id, isAuthenticated]);
-
-  useEffect(() => {
-    const el = chatRef.current;
-    if (!el) return;
-    // Só faz auto-scroll se o utilizador estiver perto do fundo
-    const distanciaAoFundo = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanciaAoFundo < 120) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [mensagens]);
 
   const handleInscrever = async () => {
     if (!isAuthenticated) return navigate('/login');
@@ -140,25 +101,6 @@ export default function JogoDetalhe() {
       addToast(err?.response?.data?.mensagem || 'Erro ao cancelar.', 'error');
     } finally {
       setInscricaoLoading(false);
-    }
-  };
-
-  const handleEnviarMensagem = async (e) => {
-    e.preventDefault();
-    if (!novaMensagem.trim() || chatLoading) return;
-    setChatLoading(true);
-    const textoMsg = novaMensagem.trim();
-    setNovaMensagem('');
-    try {
-      await api.post(`/jogos/${id}/chat`, { mensagem: textoMsg });
-      if (socketRef.current?.connected)
-        socketRef.current.emit('chat_mensagem', { jogoId: parseInt(id), mensagem: textoMsg });
-      if (!socketLigado) carregarMensagens();
-    } catch (err) {
-      addToast(err?.response?.data?.mensagem || 'Erro ao enviar mensagem.', 'error');
-      setNovaMensagem(textoMsg);
-    } finally {
-      setChatLoading(false);
     }
   };
 
@@ -605,61 +547,21 @@ export default function JogoDetalhe() {
           </div>
 
           {/* Chat */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p className="jogo-section-title" style={{ marginBottom: 0 }}><IconChat size="1em" /> Chat do Jogo</p>
-              {isAuthenticated && (
-                <span style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: socketLigado ? 'var(--success)' : 'var(--text-muted)' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: socketLigado ? 'var(--success)' : 'var(--text-muted)', display: 'inline-block' }} />
-                  {socketLigado ? 'Tempo real' : 'A ligar...'}
-                </span>
-              )}
+          {isAuthenticated ? (
+            <Chat
+              jogoId={parseInt(id)}
+              utilizadorId={utilizador?.id}
+              podeEnviar={inscrito || isCriador || (jogo.modo_jogo === 'equipa' && minhaEquipaInscrita)}
+              participantes={[
+                ...(jogo.inscritos || []).map(i => ({ id: i.utilizador_id, nome: i.nome, nickname: i.nickname, foto_url: i.foto_url })),
+                { id: jogo.criador_id, nome: jogo.criador_nome, nickname: null, foto_url: null },
+              ].filter((p, idx, arr) => arr.findIndex(x => x.id === p.id) === idx)}
+            />
+          ) : (
+            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+              <p><IconChat size="1em" /> Faz <Link to="/login" style={{ color: 'var(--primary)' }}>login</Link> para ver o chat do jogo</p>
             </div>
-            <div className="chat-box">
-              <div className="chat-msgs" ref={chatRef}>
-                {!isAuthenticated ? (
-                  <div className="empty-state" style={{ padding: '2rem' }}><p>Faz <Link to="/login">login</Link> para ver o chat</p></div>
-                ) : mensagens.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '2rem' }}><p>Ainda não há mensagens. Sê o primeiro!</p></div>
-                ) : mensagens.map(msg => {
-                  const isMine = utilizador && msg.utilizador_id === utilizador.id;
-                  return (
-                    <div key={msg.id} className={`chat-msg ${isMine ? 'mine' : ''}`}>
-                      {!isMine && (
-                        <Link to={`/jogadores/${msg.utilizador_id}`} className="chat-msg-avatar-link" aria-label={msg.utilizador_nome}>
-                          <Avatar nome={msg.utilizador_nome} fotoUrl={msg.foto_url} perfilPublico={msg.perfil_publico} size={30} />
-                        </Link>
-                      )}
-                      <div className="chat-msg-content">
-                        {!isMine && (
-                          <Link to={`/jogadores/${msg.utilizador_id}`} className="chat-msg-nome">
-                            {msg.nickname || msg.utilizador_nome}
-                          </Link>
-                        )}
-                        <div className="chat-msg-body">{msg.mensagem}</div>
-                        <span className="chat-msg-hora">{formatarHora(msg.created_at)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {isAuthenticated && (() => {
-                const podeFalar = inscrito || isCriador || (isTeamGame && minhaEquipaInscrita);
-                return (
-                  <form onSubmit={handleEnviarMensagem} className="chat-input-row">
-                    <input type="text"
-                      placeholder={podeFalar ? 'Escreve uma mensagem...' : (isTeamGame ? 'A tua equipa precisa estar inscrita' : 'Inscreve-te para participar no chat')}
-                      value={novaMensagem} onChange={e => setNovaMensagem(e.target.value)}
-                      disabled={!podeFalar} maxLength={500} />
-                    <button type="submit" className="btn btn-primary btn-sm"
-                      disabled={!novaMensagem.trim() || chatLoading || !podeFalar}>
-                      {chatLoading ? '...' : 'Enviar'}
-                    </button>
-                  </form>
-                );
-              })()}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Modal de Edição */}
