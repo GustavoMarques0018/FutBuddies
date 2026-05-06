@@ -4,6 +4,41 @@
 
 const { query } = require('../config/database');
 const { criarNotificacao } = require('./notificacoesController');
+const https = require('https');
+
+// ── Geocodificação via Nominatim (OpenStreetMap, gratuito) ──
+function geocodificarJogo(jogoId, local, regiao) {
+  const q = encodeURIComponent(`${local}${regiao ? ', ' + regiao : ''}, Portugal`);
+  const options = {
+    hostname: 'nominatim.openstreetmap.org',
+    path: `/search?q=${q}&format=json&limit=1&countrycodes=pt`,
+    headers: {
+      'User-Agent': 'FutBuddies/1.0 (gustavo@futbuddies.pt)',
+      'Accept-Language': 'pt',
+    },
+  };
+  return new Promise((resolve, reject) => {
+    https.get(options, (resp) => {
+      let data = '';
+      resp.on('data', chunk => { data += chunk; });
+      resp.on('end', async () => {
+        try {
+          const results = JSON.parse(data);
+          if (results && results[0]) {
+            const lat = parseFloat(results[0].lat);
+            const lng = parseFloat(results[0].lon);
+            await query('UPDATE jogos SET latitude=@lat, longitude=@lng WHERE id=@id',
+              { lat, lng, id: jogoId });
+            console.log(`[Geocoding] Jogo ${jogoId}: (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+          } else {
+            console.log(`[Geocoding] Jogo ${jogoId}: sem resultado para "${local}"`);
+          }
+          resolve();
+        } catch (e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
 
 // GET /api/jogos
 async function listarJogos(req, res) {
@@ -369,6 +404,13 @@ async function criarJogo(req, res) {
       }
     } catch (e) {
       console.warn('[Jogos] recorrência falhou:', e.message);
+    }
+
+    // Geocodificação async (fire-and-forget): só corre se o utilizador não forneceu coords
+    if (localFinal && !latFinal) {
+      geocodificarJogo(jogoId, localFinal, regiaoFinal).catch(e =>
+        console.warn('[Geocoding] Falhou para jogo', jogoId, ':', e.message)
+      );
     }
 
     res.status(201).json({ sucesso: true, mensagem: 'Jogo criado!', jogoId, codigoAcesso, recorrenciaCriados });
