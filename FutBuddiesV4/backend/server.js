@@ -63,6 +63,9 @@ const io = new Server(server, {
   },
 });
 
+// Torna o io acessível nos controllers via req.app.get('io')
+app.set('io', io);
+
 // Autenticação Socket.IO via JWT
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
@@ -107,27 +110,11 @@ io.on('connection', (socket) => {
     socket.leave(`jogo_${jogoId}`);
   });
 
-  // Enviar mensagem de chat em tempo real (texto, imagem, gif)
-  socket.on('chat_mensagem', (data) => {
-    const { jogoId, mensagem, tipo = 'texto', mediaUrl, mencoes = [] } = data;
-    if (tipo === 'texto' && (!mensagem || mensagem.trim().length === 0)) return;
-    if (tipo !== 'texto' && !mediaUrl) return;
-
-    const novaMensagem = {
-      id: Date.now(),
-      mensagem: tipo === 'texto' ? mensagem.trim().substring(0, 1000) : (mensagem || ''),
-      tipo,
-      media_url: mediaUrl || null,
-      mencoes_json: mencoes.length ? JSON.stringify(mencoes) : null,
-      created_at: new Date(),
-      utilizador_id: socket.utilizador.id,
-      utilizador_nome: socket.utilizador.nome,
-      nickname: socket.utilizador.nickname || null,
-      foto_url: socket.utilizador.foto_url || null,
-      reacoes: [],
-    };
-
-    io.to(`jogo_${jogoId}`).emit('nova_mensagem', novaMensagem);
+  // Enviar mensagem de chat em tempo real — apenas notificação para trigger de reload
+  // O broadcast real com ID correcto do DB é feito pelo chatController após o POST REST.
+  // Este handler não faz nada (mantido por compatibilidade mas não emite duplicados).
+  socket.on('chat_mensagem', () => {
+    // Ignorado: o servidor emite via REST controller com o ID real do DB
   });
 
   // Toggle reação a uma mensagem

@@ -1,56 +1,76 @@
 // ============================================================
-//  FutBuddies - GIF Picker (GIPHY)
-//  Usa REACT_APP_GIPHY_KEY ou fallback público para demos
+//  FutBuddies - GIF Picker (Tenor API v1)
+//  Chave de demo Tenor — substitui por REACT_APP_TENOR_KEY em produção
+//  https://tenor.com/developer/keyregistration
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './GifPicker.css';
 
-const GIPHY_KEY = process.env.REACT_APP_GIPHY_KEY || 'dc6zaTOxFJmzC';
-const GIPHY_URL = 'https://api.giphy.com/v1/gifs';
+const TENOR_KEY = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
+const BASE      = 'https://api.tenor.com/v1';
+
+async function fetchTenor(endpoint, params = {}) {
+  const qs = new URLSearchParams({ key: TENOR_KEY, locale: 'pt_PT', contentfilter: 'low', ...params });
+  const r   = await fetch(`${BASE}/${endpoint}?${qs}`);
+  if (!r.ok) throw new Error(`Tenor ${r.status}`);
+  return r.json();
+}
 
 export default function GifPicker({ onSelect, onFechar }) {
-  const [query, setQuery]       = useState('');
-  const [gifs, setGifs]         = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [trending, setTrending] = useState([]);
+  const [query, setQuery]     = useState('');
+  const [lista, setLista]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro]       = useState(false);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Fechar com Escape
+  // Fechar com Escape, focar input ao abrir
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onFechar(); };
     window.addEventListener('keydown', h);
-    inputRef.current?.focus();
+    setTimeout(() => inputRef.current?.focus(), 50);
     return () => window.removeEventListener('keydown', h);
   }, [onFechar]);
 
   // Carregar trending ao abrir
   useEffect(() => {
-    fetch(`${GIPHY_URL}/trending?api_key=${GIPHY_KEY}&limit=18&rating=pg`)
-      .then(r => r.json())
-      .then(d => setTrending(d.data || []))
-      .catch(() => {});
+    setLoading(true);
+    setErro(false);
+    fetchTenor('trending', { limit: 20, media_filter: 'minimal' })
+      .then(d => { setLista(d.results || []); setErro(false); })
+      .catch(() => setErro(true))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Pesquisa com debounce
+  // Pesquisa com debounce 400ms
   const pesquisar = useCallback((q) => {
     clearTimeout(timerRef.current);
-    if (!q.trim()) { setGifs([]); return; }
-    timerRef.current = setTimeout(async () => {
+    if (!q.trim()) {
+      // Voltar a trending
       setLoading(true);
-      try {
-        const r = await fetch(`${GIPHY_URL}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&rating=pg`);
-        const d = await r.json();
-        setGifs(d.data || []);
-      } catch { setGifs([]); }
-      finally { setLoading(false); }
+      setErro(false);
+      fetchTenor('trending', { limit: 20, media_filter: 'minimal' })
+        .then(d => { setLista(d.results || []); setErro(false); })
+        .catch(() => setErro(true))
+        .finally(() => setLoading(false));
+      return;
+    }
+    timerRef.current = setTimeout(() => {
+      setLoading(true);
+      setErro(false);
+      fetchTenor('search', { q, limit: 24, media_filter: 'minimal' })
+        .then(d => { setLista(d.results || []); setErro(false); })
+        .catch(() => setErro(true))
+        .finally(() => setLoading(false));
     }, 400);
   }, []);
 
   useEffect(() => { pesquisar(query); }, [query, pesquisar]);
 
-  const lista = query.trim() ? gifs : trending;
+  // Helpers para extrair URLs do formato Tenor
+  const thumb = (g) => g.media?.[0]?.tinygif?.url || g.media?.[0]?.gif?.url || '';
+  const gifUrl = (g) => g.media?.[0]?.gif?.url || '';
 
   return (
     <div className="gif-backdrop" onClick={onFechar}>
@@ -63,31 +83,42 @@ export default function GifPicker({ onSelect, onFechar }) {
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
-          <button className="gif-close" onClick={onFechar}>✕</button>
+          <button className="gif-close" onClick={onFechar} aria-label="Fechar">✕</button>
         </div>
+
         <div className="gif-grid">
-          {loading && <div className="gif-loading"><div className="spinner" /></div>}
-          {!loading && lista.length === 0 && (
-            <p className="gif-empty">{query ? 'Sem resultados.' : 'A carregar trending...'}</p>
+          {loading && (
+            <div className="gif-loading">
+              <div className="spinner" />
+            </div>
           )}
-          {lista.map(g => (
-            <button
-              key={g.id}
-              className="gif-item"
-              onClick={() => onSelect(g.images.fixed_height.url, g.images.fixed_height.width, g.images.fixed_height.height)}
-              title={g.title}
-            >
-              <img
-                src={g.images.fixed_height_small.url}
-                alt={g.title}
-                loading="lazy"
-                width={g.images.fixed_height_small.width}
-                height={g.images.fixed_height_small.height}
-              />
-            </button>
-          ))}
+          {!loading && erro && (
+            <p className="gif-empty">
+              Erro ao carregar GIFs.<br />
+              <small>Verifica a ligação à internet.</small>
+            </p>
+          )}
+          {!loading && !erro && lista.length === 0 && (
+            <p className="gif-empty">Sem resultados para "{query}".</p>
+          )}
+          {!loading && !erro && lista.map(g => {
+            const t = thumb(g);
+            const u = gifUrl(g);
+            if (!t || !u) return null;
+            return (
+              <button
+                key={g.id}
+                className="gif-item"
+                onClick={() => onSelect(u)}
+                title={g.title || 'GIF'}
+              >
+                <img src={t} alt={g.title || 'gif'} loading="lazy" />
+              </button>
+            );
+          })}
         </div>
-        <p className="gif-credit">Powered by GIPHY</p>
+
+        <p className="gif-credit">Powered by Tenor</p>
       </div>
     </div>
   );

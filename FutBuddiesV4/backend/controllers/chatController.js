@@ -139,6 +139,10 @@ async function enviarMensagem(req, res) {
       reacoes: [],
     };
 
+    // Broadcast para todos na sala (incluindo sender) com o ID real do DB
+    const io = req.app.get('io');
+    if (io) io.to(`jogo_${jogoId}`).emit('nova_mensagem', novaMensagem);
+
     res.status(201).json({ sucesso: true, mensagem: novaMensagem });
   } catch (err) {
     console.error('[Chat] Erro ao enviar mensagem:', err);

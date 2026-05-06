@@ -75,7 +75,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  position: relative;
+  position: relative; /* âncora para .chat-emoji-bar e .chat-reacoes */
+  min-width: 0;
 }
 .chat-autor {
   font-size: 0.72rem;
@@ -141,56 +142,64 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
 }
 .chat-reacao-btn {
   background: var(--bg-elev-2);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.78rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 1rem;       /* tamanho suficiente para emojis renderizarem bem */
+  line-height: 1.2;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   transition: background 0.12s, border-color 0.12s;
   color: var(--text);
+  white-space: nowrap;
 }
-.chat-reacao-btn:hover       { background: var(--primary-soft); border-color: var(--primary); }
-.chat-reacao-btn.minha       { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
-.chat-reacao-btn span        { font-size: 0.72rem; font-weight: 600; }
+.chat-reacao-btn:hover  { background: var(--primary-soft); border-color: var(--primary); }
+.chat-reacao-btn.minha  { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
+.chat-reacao-btn span   { font-size: 0.75rem; font-weight: 700; line-height: 1; }
 
-/* Hover emoji bar */
+/* Hover emoji bar — ancorada à .chat-bubble (position:relative) para não
+   ser cortada pelo overflow-y:auto do scroll container */
+.chat-bubble { position: relative; }
+
 .chat-emoji-bar {
   position: absolute;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   display: flex;
-  gap: 0.2rem;
+  gap: 0.15rem;
   background: var(--bg-elev-1);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 0.3rem 0.5rem;
-  box-shadow: var(--shadow-md);
-  z-index: 10;
+  padding: 0.25rem 0.4rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  z-index: 50;
   animation: pop-in 0.12s ease;
+  white-space: nowrap;
 }
 .chat-emoji-bar.left  { left: 0; }
 .chat-emoji-bar.right { right: 0; }
 @keyframes pop-in {
-  from { transform: scale(0.8); opacity: 0; }
+  from { transform: scale(0.7); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
 .chat-emoji-opt {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.15rem;
-  padding: 0.1rem 0.2rem;
+  font-size: 1.2rem;
+  padding: 0.1rem 0.15rem;
   border-radius: 6px;
   transition: transform 0.1s;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
-.chat-emoji-opt:hover { transform: scale(1.3); }
+.chat-emoji-opt:hover { transform: scale(1.35); }
 
 /* ── Input area ── */
 .chat-input-area {

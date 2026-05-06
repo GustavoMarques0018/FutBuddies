@@ -91,6 +91,23 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
           {msg.tipo !== 'texto' && msg.mensagem && (
             <p className="chat-texto chat-legenda">{msg.mensagem}</p>
           )}
+
+          {/* Hover: adicionar reação — dentro da bubble para o position:relative
+              estar dentro do scroll container sem ser cortado */}
+          {showEmojis && (
+            <div className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}>
+              {EMOJIS.map(e => (
+                <button
+                  key={e}
+                  className="chat-emoji-opt"
+                  onClick={(ev) => { ev.stopPropagation(); onReacao(msg.id, e); }}
+                  title={e}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Reações */}
@@ -99,22 +116,11 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
             {msg.reacoes.map(r => (
               <button
                 key={r.emoji}
-                className={`chat-reacao-btn ${r.utilizadores?.includes(utilizadorId) ? 'minha' : ''}`}
+                className={`chat-reacao-btn ${r.utilizadores?.includes(String(utilizadorId)) || r.utilizadores?.includes(utilizadorId) ? 'minha' : ''}`}
                 onClick={() => onReacao(msg.id, r.emoji)}
-                title={`${r.total} ${r.emoji}`}
+                title={`${r.total} pessoa(s)`}
               >
                 {r.emoji} <span>{r.total}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Hover: adicionar reação */}
-        {showEmojis && (
-          <div className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}>
-            {EMOJIS.map(e => (
-              <button key={e} className="chat-emoji-opt" onClick={() => onReacao(msg.id, e)}>
-                {e}
               </button>
             ))}
           </div>
@@ -243,12 +249,9 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
     setInput('');
     setMencoesSelecionadas([]);
     try {
-      const res = await api.post(`/jogos/${jogoId}/chat`, { mensagem: texto, tipo: 'texto', mencoes });
-      const msg = res.data.mensagem;
-      setMensagens(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
-      socketRef.current?.emit('chat_mensagem', {
-        jogoId: parseInt(jogoId), mensagem: texto, tipo: 'texto', mencoes,
-      });
+      // O servidor faz o broadcast via socket com o ID real do DB.
+      // O sender recebe o evento 'nova_mensagem' e o dedup impede duplicação.
+      await api.post(`/jogos/${jogoId}/chat`, { mensagem: texto, tipo: 'texto', mencoes });
     } catch {
       setInput(texto);
     } finally {
@@ -264,13 +267,13 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
     try {
       const fd = new FormData();
       fd.append('imagem', file);
-      const up = await api.post('/upload/imagem', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      if (!up.data.sucesso) throw new Error();
+      // NÃO definir Content-Type manualmente: o axios detecta FormData e
+      // gera automaticamente o boundary correcto para o multer parsear.
+      const up = await api.post('/upload/imagem', fd);
+      if (!up.data.sucesso) throw new Error('Upload falhou');
       const mediaUrl = up.data.url;
-      const res = await api.post(`/jogos/${jogoId}/chat`, { mensagem: '', tipo: 'imagem', mediaUrl });
-      const msg = res.data.mensagem;
-      setMensagens(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
-      socketRef.current?.emit('chat_mensagem', { jogoId: parseInt(jogoId), mensagem: '', tipo: 'imagem', mediaUrl });
+      // O servidor faz broadcast do resultado via socket com o ID real do DB
+      await api.post(`/jogos/${jogoId}/chat`, { mensagem: '', tipo: 'imagem', mediaUrl });
     } catch {
       alert('Erro ao enviar imagem. Tenta novamente.');
     } finally {
@@ -283,10 +286,8 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
   const enviarGif = async (gifUrl) => {
     setShowGif(false);
     try {
-      const res = await api.post(`/jogos/${jogoId}/chat`, { mensagem: '', tipo: 'gif', mediaUrl: gifUrl });
-      const msg = res.data.mensagem;
-      setMensagens(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
-      socketRef.current?.emit('chat_mensagem', { jogoId: parseInt(jogoId), mensagem: '', tipo: 'gif', mediaUrl: gifUrl });
+      // O servidor faz broadcast via socket com o ID real do DB
+      await api.post(`/jogos/${jogoId}/chat`, { mensagem: '', tipo: 'gif', mediaUrl: gifUrl });
     } catch {
       alert('Erro ao enviar GIF.');
     }
