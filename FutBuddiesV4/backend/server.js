@@ -107,22 +107,39 @@ io.on('connection', (socket) => {
     socket.leave(`jogo_${jogoId}`);
   });
 
-  // Enviar mensagem de chat em tempo real
+  // Enviar mensagem de chat em tempo real (texto, imagem, gif)
   socket.on('chat_mensagem', (data) => {
-    const { jogoId, mensagem } = data;
-    if (!mensagem || mensagem.trim().length === 0) return;
+    const { jogoId, mensagem, tipo = 'texto', mediaUrl, mencoes = [] } = data;
+    if (tipo === 'texto' && (!mensagem || mensagem.trim().length === 0)) return;
+    if (tipo !== 'texto' && !mediaUrl) return;
 
     const novaMensagem = {
       id: Date.now(),
-      mensagem: mensagem.trim().substring(0, 500),
-      tipo: 'texto',
+      mensagem: tipo === 'texto' ? mensagem.trim().substring(0, 1000) : (mensagem || ''),
+      tipo,
+      media_url: mediaUrl || null,
+      mencoes_json: mencoes.length ? JSON.stringify(mencoes) : null,
       created_at: new Date(),
       utilizador_id: socket.utilizador.id,
       utilizador_nome: socket.utilizador.nome,
+      nickname: socket.utilizador.nickname || null,
+      foto_url: socket.utilizador.foto_url || null,
+      reacoes: [],
     };
 
-    // Emitir para todos na sala do jogo
     io.to(`jogo_${jogoId}`).emit('nova_mensagem', novaMensagem);
+  });
+
+  // Toggle reação a uma mensagem
+  socket.on('chat_reacao', (data) => {
+    const { jogoId, mensagemId, emoji } = data;
+    if (!jogoId || !mensagemId || !emoji) return;
+    // Broadcast para todos na sala — o estado real vem do endpoint REST
+    io.to(`jogo_${jogoId}`).emit('reacao_atualizada', {
+      mensagemId,
+      utilizadorId: socket.utilizador.id,
+      emoji,
+    });
   });
 
   // ── Chat de Equipa ──────────────────────────────
@@ -496,6 +513,28 @@ async function iniciar() {
       console.log('✅ CHECK inscricoes.estado flexibilizado');
     } catch (e) {
       console.warn('⚠️  Falha a ajustar CHECK inscricoes.estado:', e.message);
+    }
+
+    // ── Chat melhorado: media, menções, reações ───────────
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.mensagens_chat','media_url') IS NULL
+          ALTER TABLE dbo.mensagens_chat ADD media_url NVARCHAR(500) NULL;
+        IF COL_LENGTH('dbo.mensagens_chat','mencoes_json') IS NULL
+          ALTER TABLE dbo.mensagens_chat ADD mencoes_json NVARCHAR(MAX) NULL;
+        IF OBJECT_ID('dbo.reacoes_chat') IS NULL
+          CREATE TABLE dbo.reacoes_chat (
+            id            INT IDENTITY PRIMARY KEY,
+            mensagem_id   INT NOT NULL,
+            utilizador_id INT NOT NULL,
+            emoji         NVARCHAR(10) NOT NULL,
+            created_at    DATETIME2 DEFAULT GETUTCDATE(),
+            CONSTRAINT uq_reacao_chat UNIQUE (mensagem_id, utilizador_id, emoji)
+          );
+      `);
+      console.log('✅ Chat melhorado: media_url, mencoes_json, reacoes_chat');
+    } catch(e) {
+      console.warn('⚠️  Chat migration:', e.message);
     }
 
     server.listen(PORT, '0.0.0.0', () => {
