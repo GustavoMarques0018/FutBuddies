@@ -304,13 +304,19 @@ export default function JogoDetalhe() {
             <h1 className="jogo-detalhe-titulo">{jogo.titulo}</h1>
             <div className="jogo-detalhe-meta">
               {jogo.local ? (
-                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(jogo.local)}`}
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(jogo.local + (jogo.regiao ? ', ' + jogo.regiao : '') + ', Portugal')}`}
                   target="_blank" rel="noopener noreferrer"
                   style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>
                   <IconMapPin size="0.85em" /> {jogo.local} ↗
                 </a>
-              ) : <span><IconMapPin size="0.85em" /> Local a definir</span>}
-              {jogo.regiao && <span><IconMapPin size="0.85em" /> {jogo.regiao}</span>}
+              ) : (
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                  <IconMapPin size="0.85em" /> {jogo.regiao || '—'}
+                  {!jogo.regiao && null}
+                </span>
+              )}
+              {/* Região em separado só quando já há morada específica */}
+              {jogo.local && jogo.regiao && <span style={{ fontSize: '0.875rem' }}><IconMapPin size="0.85em" /> {jogo.regiao}</span>}
               <span><IconClock size="0.85em" /> {formatarData(jogo.data_jogo)}</span>
               <Link to={`/jogadores/${jogo.criador_id}`} style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                 <IconUser size="0.85em" /> {jogo.criador_nome}

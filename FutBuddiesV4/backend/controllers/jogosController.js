@@ -629,10 +629,16 @@ async function editarJogo(req, res) {
     if (!titulo || !titulo.trim())
       return res.status(400).json({ sucesso: false, mensagem: 'O título é obrigatório.' });
 
+    // Se o utilizador forneceu coordenadas manuais (via pin picker), usá-las
+    const latManual = req.body.latitude  ? parseFloat(req.body.latitude)  : undefined;
+    const lngManual = req.body.longitude ? parseFloat(req.body.longitude) : undefined;
+
     await query(
       `UPDATE jogos
        SET titulo=@titulo, descricao=@descricao, data_jogo=@dataJogo, local=@local,
            regiao=@regiao, tipo_jogo=@tipoJogo, max_jogadores=@maxJogadores, nivel=@nivel,
+           latitude  = CASE WHEN @lat IS NOT NULL THEN @lat ELSE latitude END,
+           longitude = CASE WHEN @lng IS NOT NULL THEN @lng ELSE longitude END,
            updated_at=GETUTCDATE()
        WHERE id=@id`,
       {
@@ -644,9 +650,18 @@ async function editarJogo(req, res) {
         regiao: regiao || null,
         tipoJogo: tipoJogo || '5x5',
         maxJogadores: parseInt(maxJogadores) || 10,
-        nivel: nivel || 'Descontraído'
+        nivel: nivel || 'Descontraído',
+        lat: latManual ?? null,
+        lng: lngManual ?? null,
       }
     );
+
+    // Re-geocodificar se a morada foi fornecida/alterada e não há coords manuais
+    if (local && !latManual) {
+      geocodificarJogo(parseInt(id), local, regiao).catch(e =>
+        console.warn('[Geocoding] Editar jogo', id, ':', e.message)
+      );
+    }
 
     res.json({ sucesso: true, mensagem: 'Jogo atualizado com sucesso.' });
   } catch (err) {
@@ -680,4 +695,4 @@ async function eliminarJogo(req, res) {
   }
 }
 
-module.exports = { listarJogos, obterJogo, criarJogo, editarJogo, inscreverJogo, cancelarInscricao, eliminarJogo, checkin };
+module.exports = { listarJogos, obterJogo, criarJogo, editarJogo, inscreverJogo, cancelarInscricao, eliminarJogo, checkin, geocodificarJogo };
