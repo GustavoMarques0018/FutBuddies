@@ -24,15 +24,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     markerShadow,
 });
 
-// Ícone verde customizado para jogos abertos
+// Ícones SVG customizados.
+// IMPORTANTE: usar encodeURIComponent em vez de btoa — btoa rebenta com
+// caracteres fora do Latin-1 (ex: emojis), causando erro ao carregar o módulo.
+function svgIcon(fill, stroke) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 26 14 26S28 23.333 28 14C28 6.268 21.732 0 14 0z"
+          fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <circle cx="14" cy="14" r="6" fill="white" opacity="0.95"/>
+    <circle cx="14" cy="14" r="3.5" fill="${fill}" opacity="0.7"/>
+    <line x1="14" y1="8" x2="14" y2="20" stroke="${fill}" stroke-width="1" opacity="0.5"/>
+    <line x1="8" y1="14" x2="20" y2="14" stroke="${fill}" stroke-width="1" opacity="0.5"/>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
 const ICON_ABERTO = new L.Icon({
-  iconUrl:       'data:image/svg+xml;base64,' + btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
-      <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 26 14 26S28 23.333 28 14C28 6.268 21.732 0 14 0z"
-            fill="#39d353" stroke="#1a8c2a" stroke-width="1.5"/>
-      <circle cx="14" cy="14" r="7" fill="white" opacity="0.9"/>
-      <text x="14" y="18" text-anchor="middle" font-size="10" font-family="sans-serif">⚽</text>
-    </svg>`),
+  iconUrl:      svgIcon('#39d353', '#1a8c2a'),
   iconSize:     [28, 40],
   iconAnchor:   [14, 40],
   popupAnchor:  [0, -40],
@@ -42,13 +50,7 @@ const ICON_ABERTO = new L.Icon({
 });
 
 const ICON_CHEIO = new L.Icon({
-  iconUrl:       'data:image/svg+xml;base64,' + btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
-      <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 26 14 26S28 23.333 28 14C28 6.268 21.732 0 14 0z"
-            fill="#e05c00" stroke="#993f00" stroke-width="1.5"/>
-      <circle cx="14" cy="14" r="7" fill="white" opacity="0.9"/>
-      <text x="14" y="18" text-anchor="middle" font-size="10" font-family="sans-serif">⚽</text>
-    </svg>`),
+  iconUrl:      svgIcon('#e05c00', '#993f00'),
   iconSize:     [28, 40],
   iconAnchor:   [14, 40],
   popupAnchor:  [0, -40],
@@ -117,15 +119,34 @@ const COORDS_REGIAO = {
   'Valongo':           [41.1945, -8.4948],
 };
 
+// Lookup normalizado: chave em minúsculas sem acentos para tolerar variações no DB
+const COORDS_NORM = {};
+Object.entries(COORDS_REGIAO).forEach(([k, v]) => {
+  COORDS_NORM[k.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')] = v;
+});
+function coordsPorRegiao(regiao) {
+  if (!regiao) return null;
+  // 1.º tenta exacto, 2.º tenta normalizado
+  return COORDS_REGIAO[regiao]
+    ?? COORDS_NORM[regiao.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')]
+    ?? null;
+}
+
 export default function JogosMapa({ jogos = [] }) {
   // Usa coordenadas do jogo → campo → fallback por região
   const jogosComCoords = useMemo(() => {
     return jogos
-      .filter(j => j.estado !== 'cancelado' && j.estado !== 'concluido')
+      // Excluir cancelados/concluídos (o estado real do DB ou o calculado pelo client)
+      .filter(j => {
+        const est = j._displayEstado || j.estado || '';
+        return est !== 'cancelado' && est !== 'concluido';
+      })
       .map(j => {
-        const lat = j.latitude  || j.campo_lat  || COORDS_REGIAO[j.regiao]?.[0];
-        const lng = j.longitude || j.campo_lng  || COORDS_REGIAO[j.regiao]?.[1];
-        return { ...j, lat, lng, coordFallback: !j.latitude && !j.campo_lat };
+        const hasGPS = !!(j.latitude || j.campo_lat);
+        const regCoords = coordsPorRegiao(j.regiao);
+        const lat = j.latitude  || j.campo_lat  || regCoords?.[0];
+        const lng = j.longitude || j.campo_lng  || regCoords?.[1];
+        return { ...j, lat, lng, coordFallback: !hasGPS };
       })
       .filter(j => j.lat && j.lng);
   }, [jogos]);
@@ -138,8 +159,12 @@ export default function JogosMapa({ jogos = [] }) {
     return (
       <div className="jogos-mapa-vazio">
         <span style={{ fontSize: '2.5rem' }}>🗺️</span>
-        <p>Nenhum jogo com localização disponível.</p>
-        <small>Os jogos aparecem no mapa quando o campo tem coordenadas GPS.</small>
+        <p>Nenhum jogo para mostrar no mapa.</p>
+        <small>
+          {jogos.length === 0
+            ? 'A carregar jogos...'
+            : 'Verifica os filtros activos — os jogos activos aparecem automaticamente.'}
+        </small>
       </div>
     );
   }
