@@ -16,6 +16,7 @@ const { getPool } = require('./config/database');
 const path = require('path');
 const routes = require('./routes/index');
 const { iniciarScheduler } = require('./jobs/scheduler');
+const { geocodificarJogo } = require('./controllers/jogosController');
 
 // ── Validações de arranque (fail-fast) ────────────────────
 const isProd = process.env.NODE_ENV === 'production';
@@ -509,6 +510,30 @@ async function iniciar() {
 
       // Arrancar scheduler (limpeza + Fase C futura)
       iniciarScheduler();
+
+      // Batch geocoding para jogos antigos com morada mas sem GPS
+      // Corre 15s após o arranque, 1 req/1.5s para respeitar Nominatim
+      setTimeout(async () => {
+        try {
+          const { query } = require('./config/database');
+          const semGPS = await query(
+            `SELECT TOP 30 id, local, regiao FROM jogos
+             WHERE local IS NOT NULL AND LEN(LTRIM(RTRIM(local))) > 3
+               AND (latitude IS NULL OR longitude IS NULL)
+               AND estado NOT IN ('cancelado')
+             ORDER BY created_at DESC`
+          );
+          if (semGPS.recordset.length === 0) return;
+          console.log(`[Geocoding batch] ${semGPS.recordset.length} jogos para geocodificar...`);
+          for (const j of semGPS.recordset) {
+            await geocodificarJogo(j.id, j.local, j.regiao).catch(() => {});
+            await new Promise(r => setTimeout(r, 1500)); // 1 req/1.5s
+          }
+          console.log('[Geocoding batch] Concluído.');
+        } catch (e) {
+          console.warn('[Geocoding batch] Erro:', e.message);
+        }
+      }, 15000);
     });
   } catch (err) {
     console.error('❌ Erro ao iniciar servidor:', err.message);
