@@ -39,11 +39,14 @@ async function getMensagens(req, res) {
     if (ids.length > 0) {
       try {
         const rRes = await query(
-          `SELECT mensagem_id, emoji, COUNT(*) AS total,
-                  STRING_AGG(CAST(utilizador_id AS NVARCHAR), ',') AS utilizadores
-           FROM reacoes_chat
-           WHERE mensagem_id IN (${ids.join(',')})
-           GROUP BY mensagem_id, emoji`
+          `SELECT r.mensagem_id, r.emoji, COUNT(*) AS total,
+                  STUFF((SELECT ',' + CAST(r2.utilizador_id AS NVARCHAR(MAX))
+                         FROM reacoes_chat r2
+                         WHERE r2.mensagem_id = r.mensagem_id AND r2.emoji = r.emoji
+                         FOR XML PATH(''), TYPE).value('.','NVARCHAR(MAX)'), 1, 1, '') AS utilizadores
+           FROM reacoes_chat r
+           WHERE r.mensagem_id IN (${ids.join(',')})
+           GROUP BY r.mensagem_id, r.emoji`
         );
         reacoes = rRes.recordset;
       } catch (_) { /* tabela pode não existir ainda */ }
@@ -179,10 +182,14 @@ async function toggleReacao(req, res) {
 
     // Devolver estado actualizado das reações desta mensagem
     const rRes = await query(
-      `SELECT emoji, COUNT(*) AS total,
-              STRING_AGG(CAST(utilizador_id AS NVARCHAR), ',') AS utilizadores
-       FROM reacoes_chat WHERE mensagem_id=@mid
-       GROUP BY emoji`,
+      `SELECT r.emoji, COUNT(*) AS total,
+              STUFF((SELECT ',' + CAST(r2.utilizador_id AS NVARCHAR(MAX))
+                     FROM reacoes_chat r2
+                     WHERE r2.mensagem_id = r.mensagem_id AND r2.emoji = r.emoji
+                     FOR XML PATH(''), TYPE).value('.','NVARCHAR(MAX)'), 1, 1, '') AS utilizadores
+       FROM reacoes_chat r
+       WHERE r.mensagem_id = @mid
+       GROUP BY r.emoji, r.mensagem_id`,
       { mid: mensagemId }
     );
 

@@ -35,6 +35,7 @@ function formatarTexto(texto, mencoes = []) {
 function Mensagem({ msg, utilizadorId, onReacao }) {
   const isMine = msg.utilizador_id === utilizadorId;
   const [showEmojis, setShowEmojis] = useState(false);
+  const hideTimer = useRef(null);
 
   const mencoes = (() => {
     try { return msg.mencoes_json ? JSON.parse(msg.mencoes_json) : []; }
@@ -58,6 +59,12 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
     };
   }, [showEmojis]);
 
+  // Hover helpers — delay hide so mouse can cross the 6px gap to the emoji bar
+  const onAnchorEnter = () => { clearTimeout(hideTimer.current); setShowEmojis(true); };
+  const onAnchorLeave = () => { hideTimer.current = setTimeout(() => setShowEmojis(false), 150); };
+  const onBarEnter    = () => clearTimeout(hideTimer.current);
+  const onBarLeave    = () => { hideTimer.current = setTimeout(() => setShowEmojis(false), 150); };
+
   return (
     <div className={`chat-msg ${isMine ? 'mine' : ''}`}>
       {!isMine && (
@@ -79,8 +86,8 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
         <div
           ref={bubbleRef}
           className="chat-bubble-anchor"
-          onMouseEnter={() => setShowEmojis(true)}
-          onMouseLeave={() => setShowEmojis(false)}
+          onMouseEnter={onAnchorEnter}
+          onMouseLeave={onAnchorLeave}
         >
           <div className={`chat-bubble ${isMine ? 'mine' : ''}`}>
             {/* Imagem */}
@@ -115,13 +122,18 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
 
           {/* Barra de emojis — aparece acima da bubble */}
           {showEmojis && (
-            <div className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}>
+            <div
+              className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}
+              onMouseEnter={onBarEnter}
+              onMouseLeave={onBarLeave}
+            >
               {EMOJIS.map(e => (
                 <button
                   key={e}
                   className="chat-emoji-opt"
                   onPointerUp={(ev) => {
                     ev.stopPropagation();
+                    clearTimeout(hideTimer.current);
                     onReacao(msg.id, e);
                     setShowEmojis(false);
                   }}
