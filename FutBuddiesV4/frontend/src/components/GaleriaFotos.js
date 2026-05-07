@@ -38,7 +38,9 @@ export default function GaleriaFotos({ jogoId, podeAdicionar, isCriador, utiliza
       const fd = new FormData();
       fd.append('imagem', file);
       // No Content-Type header — axios detects FormData automatically
-      const upRes = await api.post('/upload/imagem', fd);
+      const upRes = await api.post('/upload/imagem', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       if (!upRes.data?.sucesso) throw new Error(upRes.data?.mensagem || 'Upload falhou.');
       const url = upRes.data.url;
       await api.post(`/jogos/${jogoId}/fotos`, { url });

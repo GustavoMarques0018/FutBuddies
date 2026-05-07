@@ -339,7 +339,9 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
       fd.append('imagem', file);
       // NÃO definir Content-Type manualmente: o axios detecta FormData e
       // gera automaticamente o boundary correcto para o multer parsear.
-      const up = await api.post('/upload/imagem', fd);
+      const up = await api.post('/upload/imagem', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       if (!up.data.sucesso) throw new Error('Upload falhou');
       const mediaUrl = up.data.url;
       // O servidor faz broadcast do resultado via socket com o ID real do DB
