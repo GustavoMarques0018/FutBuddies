@@ -139,11 +139,15 @@ body {
 }
 
 /* Bloqueia scroll do body quando o menu mobile estiver aberto.
-   A classe é alternada pelo Navbar via useEffect. */
+   A classe é alternada pelo Navbar via useEffect.
+   Nota: usamos position:fixed sem bottom:0 para não limitar a altura
+   ao viewport (o que causaria scroll-reset bugs em iOS Safari após fechar). */
 body.no-scroll {
   overflow: hidden;
   position: fixed;
-  inset: 0;
+  top: 0;   /* o JS sobrepõe isto com style.top = -scrollY para manter posição */
+  left: 0;
+  right: 0;
   width: 100%;
 }
 

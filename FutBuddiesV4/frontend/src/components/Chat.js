@@ -41,12 +41,25 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
     catch { return []; }
   })();
 
+  // Fecha a barra de emojis quando se clica fora
+  const bubbleRef = useRef(null);
+  useEffect(() => {
+    if (!showEmojis) return;
+    const handle = (e) => {
+      if (bubbleRef.current && !bubbleRef.current.contains(e.target)) {
+        setShowEmojis(false);
+      }
+    };
+    document.addEventListener('mousedown', handle);
+    document.addEventListener('touchstart', handle);
+    return () => {
+      document.removeEventListener('mousedown', handle);
+      document.removeEventListener('touchstart', handle);
+    };
+  }, [showEmojis]);
+
   return (
-    <div
-      className={`chat-msg ${isMine ? 'mine' : ''}`}
-      onMouseEnter={() => setShowEmojis(true)}
-      onMouseLeave={() => setShowEmojis(false)}
-    >
+    <div className={`chat-msg ${isMine ? 'mine' : ''}`}>
       {!isMine && (
         <Avatar
           nome={msg.utilizador_nome}
@@ -62,7 +75,15 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
           </span>
         )}
 
-        <div className={`chat-bubble ${isMine ? 'mine' : ''}`}>
+        <div
+          ref={bubbleRef}
+          className={`chat-bubble ${isMine ? 'mine' : ''}`}
+          onMouseEnter={() => setShowEmojis(true)}
+          onMouseLeave={(e) => {
+            // Só fecha por hover se não for touch (evita fechar logo após tap)
+            if (e.pointerType !== 'touch') setShowEmojis(false);
+          }}
+        >
           {/* Imagem */}
           {msg.tipo === 'imagem' && msg.media_url && (
             <a href={resolverImgUrl(msg.media_url)} target="_blank" rel="noopener noreferrer">
@@ -92,15 +113,28 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
             <p className="chat-texto chat-legenda">{msg.mensagem}</p>
           )}
 
-          {/* Hover: adicionar reação — dentro da bubble para o position:relative
-              estar dentro do scroll container sem ser cortado */}
+          {/* Botão ➕ emoji sempre visível (tap-friendly no mobile) */}
+          <button
+            className="chat-reacao-trigger"
+            onPointerUp={(ev) => { ev.stopPropagation(); setShowEmojis(v => !v); }}
+            title="Reagir"
+            aria-label="Reagir"
+          >
+            😊
+          </button>
+
+          {/* Barra de emojis — visível ao hover (desktop) ou ao tap do botão (mobile) */}
           {showEmojis && (
             <div className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}>
               {EMOJIS.map(e => (
                 <button
                   key={e}
                   className="chat-emoji-opt"
-                  onClick={(ev) => { ev.stopPropagation(); onReacao(msg.id, e); }}
+                  onPointerUp={(ev) => {
+                    ev.stopPropagation();
+                    onReacao(msg.id, e);
+                    setShowEmojis(false);
+                  }}
                   title={e}
                 >
                   {e}

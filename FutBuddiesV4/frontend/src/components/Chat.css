@@ -163,7 +163,35 @@
 .chat-reacao-btn.minha  { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
 .chat-reacao-btn span   { font-size: 0.75rem; font-weight: 700; line-height: 1; }
 
-/* Hover emoji bar — ancorada à .chat-bubble (position:relative) para não
+/* Botão de reação — sempre visível no canto da bubble (tap-friendly mobile) */
+.chat-reacao-trigger {
+  position: absolute;
+  bottom: 2px;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.78rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0;
+  line-height: 1;
+  pointer-events: none; /* invisível por defeito, activado pelo hover/touch */
+}
+.chat-bubble:hover .chat-reacao-trigger,
+.chat-bubble:focus-within .chat-reacao-trigger {
+  opacity: 0.55;
+  pointer-events: auto;
+}
+/* No mobile (touch), sempre visível mas discreto */
+@media (hover: none) {
+  .chat-reacao-trigger {
+    opacity: 0.45;
+    pointer-events: auto;
+  }
+}
+
+/* Emoji bar — ancorada à .chat-bubble (position:relative) para não
    ser cortada pelo overflow-y:auto do scroll container */
 .chat-bubble { position: relative; }
 

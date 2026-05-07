@@ -505,6 +505,8 @@ async function iniciar() {
     // ── Chat melhorado: media, menções, reações ───────────
     try {
       await pool.request().query(`
+        IF COL_LENGTH('dbo.mensagens_chat','tipo') IS NULL
+          ALTER TABLE dbo.mensagens_chat ADD tipo NVARCHAR(20) NULL DEFAULT 'texto';
         IF COL_LENGTH('dbo.mensagens_chat','media_url') IS NULL
           ALTER TABLE dbo.mensagens_chat ADD media_url NVARCHAR(500) NULL;
         IF COL_LENGTH('dbo.mensagens_chat','mencoes_json') IS NULL
