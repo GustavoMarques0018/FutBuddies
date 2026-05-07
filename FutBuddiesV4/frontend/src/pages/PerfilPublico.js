@@ -10,6 +10,8 @@ import api from '../utils/api';
 import { resolverImgUrl } from '../utils/constantes';
 import Emblema from '../components/Emblema';
 import Conquistas from '../components/Conquistas';
+import FormaChart from '../components/FormaChart';
+import H2HModal from '../components/H2HModal';
 import './PerfilPublico.css';
 
 export default function PerfilPublico() {
@@ -21,6 +23,7 @@ export default function PerfilPublico() {
   const [loading, setLoading] = useState(true);
   const [estadoAmizade, setEstadoAmizade] = useState(null); // null, 'pendente', 'aceite'
   const [amizadeLoading, setAmizadeLoading] = useState(false);
+  const [mostrarH2H, setMostrarH2H] = useState(false);
 
   useEffect(() => {
     if (euProprio && parseInt(id) === euProprio.id) {
@@ -176,6 +179,30 @@ export default function PerfilPublico() {
           ))}
         </div>
 
+        {/* Streak + H2H */}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          {(utilizador.streak_atual > 0) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.75rem',
+              background: 'rgba(251,191,36,0.12)', border: '1px solid var(--warning)',
+              borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+              <span>🔥</span>
+              <span style={{ fontWeight: 700, color: 'var(--warning)' }}>{utilizador.streak_atual}</span>
+              <span style={{ color: 'var(--text-muted)' }}>jogos sem perder</span>
+              {utilizador.streak_max > 0 && (
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  · máx {utilizador.streak_max}
+                </span>
+              )}
+            </div>
+          )}
+          {isAuthenticated && euProprio && parseInt(id) !== euProprio.id && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setMostrarH2H(true)}
+              style={{ fontSize: '0.8rem' }}>
+              ⚔️ Head-to-Head
+            </button>
+          )}
+        </div>
+
         {/* Jogos recentes */}
         {jogosRecentes?.length > 0 ? (
           <div className="card">
@@ -215,7 +242,24 @@ export default function PerfilPublico() {
           <h3 style={{ margin: '0 0 1rem', fontFamily: 'var(--font-display)' }}>🏅 Conquistas</h3>
           <Conquistas utilizadorId={id} />
         </div>
+
+        {/* Análise de Forma (12 meses) */}
+        <div className="card" style={{ padding: '1.5rem', marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 1rem', fontFamily: 'var(--font-display)' }}>📈 Forma (12 meses)</h3>
+          <FormaChart utilizadorId={id} />
+        </div>
       </div>
+
+      {/* Modal H2H */}
+      {mostrarH2H && euProprio && (
+        <H2HModal
+          meuId={euProprio.id}
+          outroId={parseInt(id)}
+          outroNome={utilizador.nickname || utilizador.nome}
+          outrFoto={utilizador.foto_url}
+          onFechar={() => setMostrarH2H(false)}
+        />
+      )}
     </div>
   );
 }

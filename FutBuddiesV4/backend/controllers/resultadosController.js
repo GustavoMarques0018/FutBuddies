@@ -5,6 +5,9 @@
 // ============================================================
 
 const { query } = require('../config/database');
+const { inserirAtividade } = require('./feedController');
+const { recalcularStreak } = require('./estatisticasController');
+const { verificarOvertake } = require('./desafiosController');
 
 // Helper: obter lista de participantes de um jogo (pick-up + equipas)
 async function obterParticipantes(jogoId) {
@@ -181,6 +184,15 @@ async function submeterResultadoPessoal(req, res) {
        WHERE id = @uid`,
       { uid: utilizadorId }
     );
+
+    // Feed de atividade + streak + desafios (fire-and-forget)
+    if (golos > 0) {
+      try {
+        await inserirAtividade(utilizadorId, 'golo_marcado', { jogoId, golos });
+      } catch (e) { console.warn('[Feed] golo_marcado:', e.message); }
+    }
+    try { await recalcularStreak(utilizadorId); } catch (e) { console.warn('[Streak]:', e.message); }
+    try { await verificarOvertake(utilizadorId); } catch (e) { console.warn('[Overtake]:', e.message); }
 
     res.json({ sucesso: true, mensagem: 'Dados pessoais registados.' });
   } catch (err) {

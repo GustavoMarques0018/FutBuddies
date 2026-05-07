@@ -4,6 +4,7 @@
 
 const { query } = require('../config/database');
 const { criarNotificacao } = require('./notificacoesController');
+const { inserirAtividade } = require('./feedController');
 const https = require('https');
 
 // ── Geocodificação via Nominatim (OpenStreetMap, gratuito) ──
@@ -131,7 +132,7 @@ async function obterJogo(req, res) {
               j.tipo_local, j.campo_id, j.modelo_pagamento, j.preco_total_cents,
               j.preco_por_jogador_cents, j.reserva_estado, j.deadline_pagamento,
               j.latitude, j.longitude,
-              j.notas_organizador, j.modo_checkin, j.votacao_tempo_aberta,
+              j.notas_organizador, j.modo_checkin, j.votacao_tempo_aberta, j.anuncio,
               u.nome AS criador_nome,
               c.nome AS campo_nome, c.foto_url AS campo_foto, c.tipo_piso AS campo_piso,
               c.dono_id AS campo_dono_id,
@@ -445,6 +446,11 @@ async function criarJogo(req, res) {
       }
     }
 
+    // Feed de atividade
+    try {
+      await inserirAtividade(req.utilizador.id, 'jogo_criado', { jogoId, titulo });
+    } catch (e) { console.warn('[Feed] inserirAtividade jogo_criado:', e.message); }
+
     res.status(201).json({ sucesso: true, mensagem: 'Jogo criado!', jogoId, codigoAcesso, recorrenciaCriados });
   } catch (err) {
     console.error('[Jogos] Criar:', err);
@@ -530,6 +536,14 @@ async function inscreverJogo(req, res) {
       await query("UPDATE jogos SET estado='cheio' WHERE id=@jogoId", { jogoId });
 
     await query('UPDATE utilizadores SET total_jogos=total_jogos+1 WHERE id=@utilizadorId', { utilizadorId });
+
+    // Feed de atividade
+    try {
+      const jogoInfo = await query('SELECT titulo FROM jogos WHERE id=@jogoId', { jogoId });
+      const titulo = jogoInfo.recordset[0]?.titulo || '';
+      await inserirAtividade(utilizadorId, 'inscricao', { jogoId, titulo });
+    } catch (e) { console.warn('[Feed] inserirAtividade inscricao:', e.message); }
+
     res.json({ sucesso: true, mensagem: `Inscrito na Equipa ${equipa}!`, equipa });
   } catch (err) {
     console.error('[Jogos] Inscrever:', err);
@@ -656,7 +670,7 @@ async function editarJogo(req, res) {
     if (jogo.criador_id !== utilizadorId && !isAdmin)
       return res.status(403).json({ sucesso: false, mensagem: 'Sem permissão para editar este jogo.' });
 
-    const { titulo, descricao, dataJogo, local, regiao, tipoJogo, maxJogadores, nivel, notasOrganizador, modoCheckin } = req.body;
+    const { titulo, descricao, dataJogo, local, regiao, tipoJogo, maxJogadores, nivel, notasOrganizador, modoCheckin, anuncio } = req.body;
 
     if (!titulo || !titulo.trim())
       return res.status(400).json({ sucesso: false, mensagem: 'O título é obrigatório.' });
@@ -670,6 +684,7 @@ async function editarJogo(req, res) {
        SET titulo=@titulo, descricao=@descricao, data_jogo=@dataJogo, local=@local,
            regiao=@regiao, tipo_jogo=@tipoJogo, max_jogadores=@maxJogadores, nivel=@nivel,
            notas_organizador=@notasOrganizador,
+           anuncio = CASE WHEN @anuncio IS NOT NULL THEN @anuncio ELSE anuncio END,
            modo_checkin = COALESCE(@modoCheckin, modo_checkin),
            latitude  = CASE WHEN @lat IS NOT NULL THEN @lat ELSE latitude END,
            longitude = CASE WHEN @lng IS NOT NULL THEN @lng ELSE longitude END,
@@ -686,6 +701,7 @@ async function editarJogo(req, res) {
         maxJogadores: parseInt(maxJogadores) || 10,
         nivel: nivel || 'Descontraído',
         notasOrganizador: notasOrganizador !== undefined ? (notasOrganizador || null) : null,
+        anuncio: anuncio !== undefined ? (anuncio || null) : null,
         modoCheckin: modoCheckin || null,
         lat: latManual ?? null,
         lng: lngManual ?? null,

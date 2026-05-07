@@ -208,4 +208,74 @@ async function toggleReacao(req, res) {
   }
 }
 
-module.exports = { getMensagens, enviarMensagem, toggleReacao };
+// GET /api/jogos/:id/chat/resumo  — AI summary via Claude API
+async function resumirChat(req, res) {
+  try {
+    const jogoId = parseInt(req.params.id);
+
+    // Verify user is a participant or creator
+    const acesso = await query(
+      `SELECT j.criador_id,
+              (SELECT COUNT(*) FROM inscricoes WHERE jogo_id=@jid AND utilizador_id=@uid AND estado='confirmado') AS inscrito
+         FROM jogos j WHERE j.id=@jid`,
+      { jid: jogoId, uid: req.utilizador.id }
+    );
+    if (!acesso.recordset.length) return res.status(404).json({ sucesso: false, mensagem: 'Jogo não encontrado.' });
+    const row = acesso.recordset[0];
+    if (row.criador_id !== req.utilizador.id && row.inscrito === 0)
+      return res.status(403).json({ sucesso: false, mensagem: 'Sem acesso ao chat deste jogo.' });
+
+    // Fetch last 50 text messages
+    const msgs = await query(
+      `SELECT TOP 50 u.nickname, u.nome, m.conteudo
+         FROM mensagens_chat m
+         JOIN utilizadores u ON u.id = m.utilizador_id
+         WHERE m.jogo_id = @jid AND m.tipo = 'texto' AND LEN(m.conteudo) > 0
+         ORDER BY m.created_at DESC`,
+      { jid: jogoId }
+    );
+
+    if (!msgs.recordset.length)
+      return res.json({ sucesso: true, resumo: 'Ainda não há mensagens suficientes para resumir.' });
+
+    const linhas = msgs.recordset.reverse()
+      .map(m => `${m.nickname || m.nome}: ${m.conteudo}`)
+      .join('\n');
+
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!ANTHROPIC_KEY)
+      return res.status(503).json({ sucesso: false, mensagem: 'Serviço de IA não configurado.' });
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `Resume em 3-5 frases curtas em português o que foi discutido neste chat de futebol. Foca nos tópicos principais (logística, local, hora, confirmações, etc.):\n\n${linhas}`,
+        }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      console.error('[Chat/IA] Erro Anthropic:', err);
+      return res.status(502).json({ sucesso: false, mensagem: 'Erro ao contactar IA.' });
+    }
+
+    const json = await resp.json();
+    const resumo = json.content?.[0]?.text || 'Não foi possível gerar resumo.';
+    res.json({ sucesso: true, resumo });
+  } catch (err) {
+    console.error('[Chat] Resumo IA:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+module.exports = { getMensagens, enviarMensagem, toggleReacao, resumirChat };

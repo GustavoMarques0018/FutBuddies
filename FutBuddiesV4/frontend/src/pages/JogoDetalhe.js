@@ -24,6 +24,8 @@ import PrevisaoTempo from '../components/PrevisaoTempo';
 import QRCheckin from '../components/QRCheckin';
 import GaleriaFotos from '../components/GaleriaFotos';
 import VotacaoTempo from '../components/VotacaoTempo';
+import BalanceamentoEquipas from '../components/BalanceamentoEquipas';
+import GeradorPoster from '../components/GeradorPoster';
 import './Jogos.css';
 
 export default function JogoDetalhe() {
@@ -50,6 +52,9 @@ export default function JogoDetalhe() {
   const [cancelarModal, setCancelarModal] = useState(false);
   const [cancelarMotivo, setCancelarMotivo] = useState('');
   const [cancelarLoading, setCancelarLoading] = useState(false);
+  // Feature: Balanceamento + Poster
+  const [mostrarBalanceamento, setMostrarBalanceamento] = useState(false);
+  const [mostrarPoster, setMostrarPoster] = useState(false);
 
   // QR checkin from URL param
   const searchParams = new URLSearchParams(window.location.search);
@@ -153,6 +158,7 @@ export default function JogoDetalhe() {
       maxJogadores: jogo.max_jogadores || 10,
       nivel: jogo.nivel || 'Descontraído',
       notasOrganizador: jogo.notas_organizador || '',
+      anuncio: jogo.anuncio || '',
     });
     setEditando(true);
   };
@@ -320,6 +326,28 @@ export default function JogoDetalhe() {
                   🎲 Sortear Equipas
                 </button>
               )}
+              {isCriador && !encerrado && !isTeamGame && jogo.estado === 'aberto' && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => setMostrarBalanceamento(true)}
+                  title="Balancear equipas por nível"
+                >
+                  ⚖️ Balancear
+                </button>
+              )}
+              {(inscrito || isCriador) && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => setMostrarPoster(true)}
+                  title="Gerar poster do jogo"
+                >
+                  🖼️ Poster
+                </button>
+              )}
               {jogo.estado !== 'cancelado' && !encerrado && (
                 <button className="btn btn-ghost btn-sm" onClick={handlePartilhar} style={{ fontSize: '0.75rem' }}>
                   📤 Partilhar
@@ -471,6 +499,15 @@ export default function JogoDetalhe() {
             )}
           </div>
         </div>
+
+        {/* ── Anúncio do Criador (banner fixo no topo do chat) ── */}
+        {jogo.anuncio && (
+          <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'rgba(0,192,107,0.08)',
+            border: '1px solid var(--primary)', borderRadius: 'var(--radius)', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📣</span>
+            <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>{jogo.anuncio}</p>
+          </div>
+        )}
 
         {/* ── Cancelar Jogo — confirmação inline ── */}
         {cancelarModal && (
@@ -731,6 +768,25 @@ export default function JogoDetalhe() {
           utilizadorId={utilizador?.id}
         />
 
+        {/* Balanceamento de Equipas */}
+        {mostrarBalanceamento && (
+          <BalanceamentoEquipas
+            jogoId={parseInt(id)}
+            onFechar={() => setMostrarBalanceamento(false)}
+            onAceite={() => { setMostrarBalanceamento(false); carregarJogo(); }}
+          />
+        )}
+
+        {/* Gerador de Poster */}
+        {mostrarPoster && (
+          <GeradorPoster
+            jogo={jogo}
+            equipaA={equipaA}
+            equipaB={equipaB}
+            onFechar={() => setMostrarPoster(false)}
+          />
+        )}
+
         {/* Modal de Edição */}
         {editando && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
@@ -813,6 +869,20 @@ export default function JogoDetalhe() {
                     placeholder="Ex: Trazer coletes, bola no carro do João..."
                     style={{ resize: 'vertical' }}
                   />
+                </div>
+                <div className="form-field">
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>
+                    📣 Anúncio (visível a todos os inscritos)
+                  </label>
+                  <textarea
+                    value={editForm.anuncio || ''}
+                    onChange={e => setEditForm({ ...editForm, anuncio: e.target.value })}
+                    rows={2}
+                    maxLength={500}
+                    placeholder="Ex: Trazer coletes vermelhos! Campo mudado para..."
+                    style={{ resize: 'vertical' }}
+                  />
+                  <small style={{ color: 'var(--text-muted)' }}>{(editForm.anuncio || '').length}/500 · Deixa em branco para remover</small>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button type="button" className="btn btn-ghost" onClick={() => setEditando(false)}>Cancelar</button>

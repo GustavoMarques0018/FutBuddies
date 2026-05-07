@@ -211,6 +211,8 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
   const [mencaoQ, setMencaoQ]           = useState('');
   const [mencaoLista, setMencaoLista]   = useState([]);
   const [mencoesSelecionadas, setMencoesSelecionadas] = useState([]); // [{id, nome}]
+  const [resumo, setResumo]             = useState(null);
+  const [resumoLoading, setResumoLoading] = useState(false);
 
   const chatRef   = useRef(null);
   const inputRef  = useRef(null);
@@ -394,8 +396,43 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
       {/* Header */}
       <div className="chat-header">
         <span className="chat-header-title"><IconChat size="1em" /> Chat do Jogo</span>
-        <span className={`chat-dot ${ligado ? 'on' : ''}`} title={ligado ? 'Ligado' : 'Desligado'} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+            disabled={resumoLoading}
+            onClick={async () => {
+              setResumoLoading(true);
+              try {
+                const r = await api.get(`/jogos/${jogoId}/chat/resumo`);
+                setResumo(r.data.resumo);
+              } catch { setResumo('Não foi possível gerar resumo.'); }
+              finally { setResumoLoading(false); }
+            }}
+            title="Resumo do chat por IA"
+          >
+            {resumoLoading ? '⏳' : '🤖 Resumir'}
+          </button>
+          <span className={`chat-dot ${ligado ? 'on' : ''}`} title={ligado ? 'Ligado' : 'Desligado'} />
+        </div>
       </div>
+
+      {/* Resumo IA */}
+      {resumo && (
+        <div style={{ margin: '0 0.75rem 0.5rem', padding: '0.6rem 0.75rem',
+          background: 'rgba(59,130,246,0.08)', border: '1px solid var(--info)',
+          borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', lineHeight: 1.5,
+          display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+          <span style={{ flexShrink: 0 }}>🤖</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ fontSize: '0.7rem', textTransform: 'uppercase',
+              letterSpacing: '0.5px', color: 'var(--info)' }}>Resumo IA</strong>
+            <p style={{ margin: '0.2rem 0 0' }}>{resumo}</p>
+          </div>
+          <button onClick={() => setResumo(null)} style={{ background: 'none', border: 'none',
+            cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', flexShrink: 0 }}>✕</button>
+        </div>
+      )}
 
       {/* Mensagens */}
       <div className="chat-msgs" ref={chatRef}>

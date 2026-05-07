@@ -37,6 +37,8 @@ const DonoCampo      = lazy(() => import('./pages/DonoCampo'));
 const Suporte        = lazy(() => import('./pages/Suporte'));
 const Campos         = lazy(() => import('./pages/Campos'));
 const AvaliarCampo   = lazy(() => import('./pages/AvaliarCampo'));
+const Feed           = lazy(() => import('./pages/Feed'));
+const Desafios       = lazy(() => import('./pages/Desafios'));
 
 function Loading() {
   return (
@@ -100,6 +102,8 @@ function AppRoutes() {
           <Route path="/amigos" element={<RotaProtegida><Amigos /></RotaProtegida>} />
           <Route path="/dono-campo" element={<RotaProtegida><DonoCampo /></RotaProtegida>} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/feed" element={<RotaProtegida><Feed /></RotaProtegida>} />
+          <Route path="/desafios" element={<RotaProtegida><Desafios /></RotaProtegida>} />
           <Route path="/admin" element={<RotaAdmin><Admin /></RotaAdmin>} />
           <Route path="*" element={<NaoEncontrado />} />
         </Routes>
