@@ -37,6 +37,10 @@ if (isProd && !process.env.CORS_ORIGIN) {
 const app = express();
 const server = http.createServer(app);
 
+// Render (e a maioria dos PaaS) usa um reverse proxy — sem isto o
+// express-rate-limit não consegue ler o IP real do cliente e lança erro.
+app.set('trust proxy', 1);
+
 // ── CORS ──────────────────────────────────────────────────
 // Em dev: aceita qualquer origem se CORS_ORIGIN não estiver definido.
 // Em prod: lista estrita (separada por vírgulas).
