@@ -83,7 +83,7 @@ export default function PerfilPublico() {
           <div className="perfil-pub-header card">
             <div className="perfil-pub-avatar">
               {utilizador.foto_url
-                ? <img src={resolverImgUrl(utilizador.foto_url)} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ? <img src={resolverImgUrl(utilizador.foto_url)} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement.textContent = getInitials(utilizador.nome); }} />
                 : getInitials(utilizador.nome)}
             </div>
             <div className="perfil-pub-info">
@@ -124,7 +124,7 @@ export default function PerfilPublico() {
         <div className="perfil-pub-header card">
           <div className="perfil-pub-avatar">
             {utilizador.foto_url
-              ? <img src={resolverImgUrl(utilizador.foto_url)} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ? <img src={resolverImgUrl(utilizador.foto_url)} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement.textContent = getInitials(utilizador.nome); }} />
               : getInitials(utilizador.nome)}
           </div>
           <div className="perfil-pub-info">
