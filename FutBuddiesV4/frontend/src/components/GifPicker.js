@@ -1,22 +1,12 @@
 // ============================================================
-//  FutBuddies - GIF Picker (GIPHY API)
-//  Usa REACT_APP_GIPHY_KEY em produção; fallback para a chave
-//  pública beta da GIPHY (adequada para demos / projetos académicos).
-//  https://developers.giphy.com/
+//  FutBuddies - GIF Picker
+//  Chama o backend como proxy → sem problemas de CORS.
+//  Backend usa GIPHY_KEY env var no Render.
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import api from '../utils/api';
 import './GifPicker.css';
-
-const GIPHY_KEY = process.env.REACT_APP_GIPHY_KEY || 'dc6zaTOxFJmzC';
-const BASE      = 'https://api.giphy.com/v1/gifs';
-
-async function fetchGiphy(endpoint, params = {}) {
-  const qs = new URLSearchParams({ api_key: GIPHY_KEY, rating: 'g', lang: 'pt', ...params });
-  const r  = await fetch(`${BASE}/${endpoint}?${qs}`);
-  if (!r.ok) throw new Error(`GIPHY ${r.status}`);
-  return r.json();
-}
 
 export default function GifPicker({ onSelect, onFechar }) {
   const [query, setQuery]     = useState('');
@@ -34,36 +24,28 @@ export default function GifPicker({ onSelect, onFechar }) {
     return () => window.removeEventListener('keydown', h);
   }, [onFechar]);
 
-  const carregarTrending = useCallback(() => {
+  const carregar = useCallback((q = '') => {
     setLoading(true);
     setErro(false);
-    fetchGiphy('trending', { limit: 20 })
-      .then(d => { setLista(d.data || []); setErro(false); })
+    const params = q ? { q, limit: 24 } : { limit: 20 };
+    api.get('/gifs', { params })
+      .then(r => { setLista(r.data?.data || []); setErro(false); })
       .catch(() => setErro(true))
       .finally(() => setLoading(false));
   }, []);
 
-  // Carregar trending ao abrir
-  useEffect(() => { carregarTrending(); }, [carregarTrending]);
+  // Trending ao abrir
+  useEffect(() => { carregar(); }, [carregar]);
 
-  // Pesquisa com debounce 400ms
-  const pesquisar = useCallback((q) => {
+  // Pesquisa com debounce 450ms
+  useEffect(() => {
     clearTimeout(timerRef.current);
-    if (!q.trim()) { carregarTrending(); return; }
-    timerRef.current = setTimeout(() => {
-      setLoading(true);
-      setErro(false);
-      fetchGiphy('search', { q, limit: 24 })
-        .then(d => { setLista(d.data || []); setErro(false); })
-        .catch(() => setErro(true))
-        .finally(() => setLoading(false));
-    }, 400);
-  }, [carregarTrending]);
-
-  useEffect(() => { pesquisar(query); }, [query, pesquisar]);
+    timerRef.current = setTimeout(() => carregar(query), query ? 450 : 0);
+    return () => clearTimeout(timerRef.current);
+  }, [query, carregar]);
 
   // Helpers para extrair URLs do formato GIPHY
-  const thumb  = (g) => g.images?.fixed_height_small?.url || g.images?.downsized?.url || g.images?.original?.url || '';
+  const thumb  = (g) => g.images?.fixed_height_small?.url || g.images?.downsized?.url || '';
   const gifUrl = (g) => g.images?.original?.url || g.images?.downsized?.url || '';
 
   return (
@@ -82,9 +64,7 @@ export default function GifPicker({ onSelect, onFechar }) {
 
         <div className="gif-grid">
           {loading && (
-            <div className="gif-loading">
-              <div className="spinner" />
-            </div>
+            <div className="gif-loading"><div className="spinner" /></div>
           )}
           {!loading && erro && (
             <p className="gif-empty">
