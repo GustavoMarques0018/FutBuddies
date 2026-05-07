@@ -339,8 +339,9 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
       const mediaUrl = up.data.url;
       // O servidor faz broadcast do resultado via socket com o ID real do DB
       await api.post(`/jogos/${jogoId}/chat`, { mensagem: '', tipo: 'imagem', mediaUrl });
-    } catch {
-      alert('Erro ao enviar imagem. Tenta novamente.');
+    } catch (err) {
+      const msg = err?.response?.data?.mensagem || err?.message || 'Erro ao enviar imagem. Tenta novamente.';
+      alert(msg);
     } finally {
       setUploadingImg(false);
       e.target.value = '';

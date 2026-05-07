@@ -13,11 +13,16 @@ const fs     = require('fs');
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+const ALLOWED_EXT  = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 
 const fileFilter = (req, file, cb) => {
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (ALLOWED_EXT.includes(ext)) cb(null, true);
+  const ext  = path.extname(file.originalname).toLowerCase();
+  const mime = (file.mimetype || '').toLowerCase();
+  // Accept if either mimetype or extension is whitelisted.
+  // iOS Safari sends HEIC photos as image/jpeg (auto-converted) but keeps .heic filename,
+  // so checking EITHER is the safest approach.
+  if (ALLOWED_MIME.includes(mime) || ALLOWED_EXT.includes(ext)) cb(null, true);
   else cb(new Error('Tipo de ficheiro não suportado. Usa JPG, PNG, GIF ou WebP.'));
 };
 
@@ -48,7 +53,7 @@ if (cloudinaryConfigurado) {
       cloudinary,
       params: {
         folder: process.env.CLOUDINARY_FOLDER || 'futbuddies',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
         transformation: [{ quality: 'auto:good', fetch_format: 'auto' }],
       },
     });
@@ -75,7 +80,7 @@ const diskStorage = multer.diskStorage({
 const upload = multer({
   storage: cloudinaryStorage || diskStorage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB — mobile photos can exceed 5 MB
 });
 
 // POST /api/upload/imagem — upload de uma imagem

@@ -219,7 +219,20 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ── UPLOAD ────────────────────────────────────────────────
-router.post('/upload/imagem', autenticar, upload.single('imagem'), uploadImagem);
+// Wraps multer so that its errors (file too large, wrong type) are returned as
+// proper JSON 400 responses instead of crashing Express with an unhandled error.
+router.post('/upload/imagem', autenticar, (req, res, next) => {
+  upload.single('imagem')(req, res, (err) => {
+    if (err) {
+      const multer = require('multer');
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ sucesso: false, mensagem: 'Ficheiro demasiado grande. Máximo 15 MB.' });
+      }
+      return res.status(400).json({ sucesso: false, mensagem: err.message || 'Erro ao receber ficheiro.' });
+    }
+    next();
+  });
+}, uploadImagem);
 
 // ── GIF PROXY (evita CORS do browser → GIPHY) ─────────────
 router.get('/gifs', async (req, res) => {
