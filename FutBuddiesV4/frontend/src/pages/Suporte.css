@@ -2,7 +2,8 @@
    FutBuddies - Suporte
    ============================================================ */
 .suporte-page {
-  padding: 0 0 4rem;
+  padding-bottom: 4rem;
+  /* padding-top from index.css page-wrapper rule */
   background: var(--bg);
 }
 .suporte-header {

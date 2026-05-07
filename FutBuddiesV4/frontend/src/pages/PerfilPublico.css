@@ -2,7 +2,7 @@
    Perfil Público v6
    ============================================================ */
 
-.perfil-publico-page { padding-bottom: 4rem; }
+.perfil-pub-page { padding-bottom: 4rem; }
 
 .pp-card {
   background: linear-gradient(135deg, var(--bg-elev-1), var(--bg-elev-2));
