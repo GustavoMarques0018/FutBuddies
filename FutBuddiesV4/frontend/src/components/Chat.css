@@ -74,8 +74,7 @@
 .chat-bubble-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  position: relative; /* âncora para .chat-emoji-bar e .chat-reacoes */
+  gap: 0.15rem;
   min-width: 0;
 }
 .chat-autor {
@@ -87,10 +86,8 @@
 .chat-hora {
   font-size: 0.65rem;
   color: var(--text-muted);
-  padding: 0 0.25rem;
-  align-self: flex-end;
+  padding: 0 0.1rem;
 }
-.chat-msg.mine .chat-hora { align-self: flex-start; }
 
 /* Balão */
 .chat-bubble {
@@ -163,36 +160,56 @@
 .chat-reacao-btn.minha  { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
 .chat-reacao-btn span   { font-size: 0.75rem; font-weight: 700; line-height: 1; }
 
-/* Botão de reação — sempre visível no canto da bubble (tap-friendly mobile) */
+/* Wrapper que ancora a emoji bar sem interferir com o layout da bubble */
+.chat-bubble-anchor {
+  position: relative;
+  display: inline-flex; /* ajusta-se ao tamanho da bubble */
+  max-width: 100%;
+}
+.chat-msg.mine .chat-bubble-anchor {
+  align-self: flex-end;
+}
+
+/* Linha meta: hora + botão de reação */
+.chat-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.25rem;
+}
+.chat-meta-row.mine {
+  justify-content: flex-end;
+}
+
+/* Botão de reação — ao lado do timestamp, mobile-friendly */
 .chat-reacao-trigger {
-  position: absolute;
-  bottom: 2px;
-  right: 6px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.78rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-  padding: 0;
+  font-size: 0.9rem;
   line-height: 1;
-  pointer-events: none; /* invisível por defeito, activado pelo hover/touch */
+  padding: 0 2px;
+  /* Por defeito invisível em desktop (aparece com hover na bubble) */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
 }
-.chat-bubble:hover .chat-reacao-trigger,
-.chat-bubble:focus-within .chat-reacao-trigger {
-  opacity: 0.55;
+/* Desktop: aparece ao hover da .chat-bubble-anchor */
+.chat-bubble-anchor:hover ~ .chat-meta-row .chat-reacao-trigger,
+.chat-meta-row:hover .chat-reacao-trigger {
+  opacity: 0.6;
   pointer-events: auto;
 }
-/* No mobile (touch), sempre visível mas discreto */
+/* Mobile (touch screens): sempre visível */
 @media (hover: none) {
   .chat-reacao-trigger {
-    opacity: 0.45;
+    opacity: 0.5;
     pointer-events: auto;
   }
 }
 
-/* Emoji bar — ancorada à .chat-bubble (position:relative) para não
-   ser cortada pelo overflow-y:auto do scroll container */
+/* Emoji bar — ancorada ao .chat-bubble-anchor */
 .chat-bubble { position: relative; }
 
 .chat-emoji-bar {

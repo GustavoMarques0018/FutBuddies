@@ -75,55 +75,45 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
           </span>
         )}
 
+        {/* Wrapper da bubble + emoji bar (position:relative para ancorar a barra) */}
         <div
           ref={bubbleRef}
-          className={`chat-bubble ${isMine ? 'mine' : ''}`}
+          className="chat-bubble-anchor"
           onMouseEnter={() => setShowEmojis(true)}
-          onMouseLeave={(e) => {
-            // Só fecha por hover se não for touch (evita fechar logo após tap)
-            if (e.pointerType !== 'touch') setShowEmojis(false);
-          }}
+          onMouseLeave={() => setShowEmojis(false)}
         >
-          {/* Imagem */}
-          {msg.tipo === 'imagem' && msg.media_url && (
-            <a href={resolverImgUrl(msg.media_url)} target="_blank" rel="noopener noreferrer">
+          <div className={`chat-bubble ${isMine ? 'mine' : ''}`}>
+            {/* Imagem */}
+            {msg.tipo === 'imagem' && msg.media_url && (
+              <a href={resolverImgUrl(msg.media_url)} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={resolverImgUrl(msg.media_url)}
+                  alt="imagem"
+                  className="chat-img"
+                  loading="lazy"
+                />
+              </a>
+            )}
+            {/* GIF */}
+            {msg.tipo === 'gif' && msg.media_url && (
               <img
-                src={resolverImgUrl(msg.media_url)}
-                alt="imagem"
-                className="chat-img"
+                src={msg.media_url}
+                alt="gif"
+                className="chat-img chat-gif"
                 loading="lazy"
               />
-            </a>
-          )}
-          {/* GIF */}
-          {msg.tipo === 'gif' && msg.media_url && (
-            <img
-              src={msg.media_url}
-              alt="gif"
-              className="chat-img chat-gif"
-              loading="lazy"
-            />
-          )}
-          {/* Texto */}
-          {(msg.tipo === 'texto' || !msg.tipo) && msg.mensagem && (
-            <p className="chat-texto">{formatarTexto(msg.mensagem, mencoes)}</p>
-          )}
-          {/* Legenda sob imagem/gif */}
-          {msg.tipo !== 'texto' && msg.mensagem && (
-            <p className="chat-texto chat-legenda">{msg.mensagem}</p>
-          )}
+            )}
+            {/* Texto */}
+            {(msg.tipo === 'texto' || !msg.tipo) && msg.mensagem && (
+              <p className="chat-texto">{formatarTexto(msg.mensagem, mencoes)}</p>
+            )}
+            {/* Legenda sob imagem/gif */}
+            {msg.tipo !== 'texto' && msg.mensagem && (
+              <p className="chat-texto chat-legenda">{msg.mensagem}</p>
+            )}
+          </div>
 
-          {/* Botão ➕ emoji sempre visível (tap-friendly no mobile) */}
-          <button
-            className="chat-reacao-trigger"
-            onPointerUp={(ev) => { ev.stopPropagation(); setShowEmojis(v => !v); }}
-            title="Reagir"
-            aria-label="Reagir"
-          >
-            😊
-          </button>
-
-          {/* Barra de emojis — visível ao hover (desktop) ou ao tap do botão (mobile) */}
+          {/* Barra de emojis — aparece acima da bubble */}
           {showEmojis && (
             <div className={`chat-emoji-bar ${isMine ? 'right' : 'left'}`}>
               {EMOJIS.map(e => (
@@ -160,9 +150,30 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
           </div>
         )}
 
-        <span className="chat-hora">
-          {new Date(msg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
-        </span>
+        {/* Linha de meta: hora + botão de reagir (visível no mobile) */}
+        <div className={`chat-meta-row ${isMine ? 'mine' : ''}`}>
+          {!isMine && (
+            <button
+              className="chat-reacao-trigger"
+              onPointerUp={(ev) => { ev.stopPropagation(); setShowEmojis(v => !v); }}
+              aria-label="Reagir"
+            >
+              😊
+            </button>
+          )}
+          <span className="chat-hora">
+            {new Date(msg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          {isMine && (
+            <button
+              className="chat-reacao-trigger"
+              onPointerUp={(ev) => { ev.stopPropagation(); setShowEmojis(v => !v); }}
+              aria-label="Reagir"
+            >
+              😊
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

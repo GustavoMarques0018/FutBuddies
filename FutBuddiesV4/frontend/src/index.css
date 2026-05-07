@@ -128,14 +128,9 @@ body {
   transition: background-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
   /* Tap-highlight discreto, sem flash azul */
   -webkit-tap-highlight-color: rgba(57,255,20,0.18);
-  /* Evita scroll horizontal "fantasma". `clip` (em vez de hidden)
-     não cria um novo scroll-container e não interfere com o scroll
-     vertical do rato/trackpad em Chrome/Firefox/Edge. */
-  overflow-x: clip;
-}
-/* Fallback para browsers antigos que não suportam overflow-x: clip */
-@supports not (overflow-x: clip) {
-  body { overflow-x: hidden; }
+  /* NOTA: overflow-x NÃO vai aqui — overflow-x:clip/hidden no body
+     impede o body de ser o scroll container do documento em Chrome/Safari,
+     tornando TODAS as páginas não-scrolláveis. Ver #root abaixo. */
 }
 
 /* Bloqueia scroll do body quando o menu mobile estiver aberto.
@@ -170,7 +165,16 @@ body::before {
 }
 [data-theme="light"] body::before { opacity: 0.35; }
 
-#root { position: relative; z-index: 1; }
+/* overflow-x aqui em vez de no body: evita scroll horizontal sem
+   bloquear o body como scroll container do documento. */
+#root {
+  position: relative;
+  z-index: 1;
+  overflow-x: clip;
+}
+@supports not (overflow-x: clip) {
+  #root { overflow-x: hidden; }
+}
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
