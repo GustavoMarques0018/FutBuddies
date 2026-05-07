@@ -28,6 +28,11 @@ export default function GaleriaFotos({ jogoId, podeAdicionar, isCriador, utiliza
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Ficheiro demasiado grande. Máximo 15 MB.');
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();

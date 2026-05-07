@@ -328,6 +328,11 @@ export default function Chat({ jogoId, utilizadorId, podeEnviar, participantes =
   const handleImagem = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Ficheiro demasiado grande. Máximo 15 MB.');
+      e.target.value = '';
+      return;
+    }
     setUploadingImg(true);
     try {
       const fd = new FormData();
