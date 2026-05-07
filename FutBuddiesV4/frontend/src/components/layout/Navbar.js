@@ -48,13 +48,9 @@ export default function Navbar() {
   // Bloquear scroll do body enquanto o menu mobile está aberto
   useEffect(() => {
     if (menuAberto) {
-      const scrollY = window.scrollY;
-      document.body.style.top = `-${scrollY}px`;
       document.body.classList.add('no-scroll');
       return () => {
         document.body.classList.remove('no-scroll');
-        document.body.style.top = '';
-        window.scrollTo(0, scrollY);
       };
     }
   }, [menuAberto]);

@@ -134,16 +134,11 @@ body {
 }
 
 /* Bloqueia scroll do body quando o menu mobile estiver aberto.
-   A classe é alternada pelo Navbar via useEffect.
-   Nota: usamos position:fixed sem bottom:0 para não limitar a altura
-   ao viewport (o que causaria scroll-reset bugs em iOS Safari após fechar). */
+   Usamos apenas overflow:hidden — position:fixed causava bugs em iOS Safari
+   onde após fechar o menu a página ficava não-scrollável. */
 body.no-scroll {
   overflow: hidden;
-  position: fixed;
-  top: 0;   /* o JS sobrepõe isto com style.top = -scrollY para manter posição */
-  left: 0;
-  right: 0;
-  width: 100%;
+  height: 100%;
 }
 
 /* Quebra palavras longas para não estourarem o layout em ecrãs pequenos */
@@ -165,15 +160,9 @@ body::before {
 }
 [data-theme="light"] body::before { opacity: 0.35; }
 
-/* overflow-x aqui em vez de no body: evita scroll horizontal sem
-   bloquear o body como scroll container do documento. */
 #root {
   position: relative;
   z-index: 1;
-  overflow-x: clip;
-}
-@supports not (overflow-x: clip) {
-  #root { overflow-x: hidden; }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -624,6 +613,15 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
 .campos-page {
   padding-top: calc(var(--navbar-h) + env(safe-area-inset-top, 0px) + 1.5rem);
   min-height: 100vh;
+  /* Clip horizontal por página, não no body/root (que bloquearia scroll) */
+  overflow-x: clip;
+}
+@supports not (overflow-x: clip) {
+  .page-wrap, main, .home, .jogos-page, .equipas-page, .perfil-page,
+  .sobre-page, .auth-page, .admin-page, .amigos-page, .equipa-detalhe-page,
+  .jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page, .perfil-publico-page,
+  .dono-page, .suporte-page, .meus-jogos-page, .reportar-jogo-page, .nao-encontrado-page,
+  .campos-page { overflow-x: hidden; }
 }
 
 /* ── Utilitários ────────────────────────────────────────── */
