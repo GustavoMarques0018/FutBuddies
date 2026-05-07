@@ -308,6 +308,94 @@ async function sincronizarTotaisVitorias() {
   }
 }
 
+/**
+ * Auto-cancela jogos que começam em ~10 minutos com menos de 50% de vagas preenchidas.
+ */
+async function autoCancelarJogosVazios() {
+  try {
+    const jogos = await query(`
+      SELECT j.id, j.titulo, j.max_jogadores, j.criador_id,
+             COUNT(CASE WHEN i.estado='confirmado' THEN 1 END) AS total_confirmados
+      FROM jogos j
+      LEFT JOIN inscricoes i ON i.jogo_id = j.id
+      WHERE j.estado IN ('aberto', 'cheio')
+        AND j.auto_cancelado IS NULL
+        AND j.data_jogo BETWEEN DATEADD(MINUTE, 8, GETUTCDATE()) AND DATEADD(MINUTE, 12, GETUTCDATE())
+      GROUP BY j.id, j.titulo, j.max_jogadores, j.criador_id
+      HAVING COUNT(CASE WHEN i.estado='confirmado' THEN 1 END) < j.max_jogadores / 2
+    `);
+    for (const j of jogos.recordset) {
+      await query(
+        `UPDATE jogos SET estado='cancelado', auto_cancelado=1, updated_at=GETUTCDATE() WHERE id=@id`,
+        { id: j.id }
+      );
+      const inscritos = await query(
+        `SELECT utilizador_id FROM inscricoes WHERE jogo_id=@id AND estado='confirmado'`,
+        { id: j.id }
+      );
+      for (const insc of inscritos.recordset) {
+        try {
+          await criarNotificacao({
+            utilizadorId: insc.utilizador_id,
+            tipo: 'cancelamento',
+            titulo: '⚠️ Jogo cancelado automaticamente',
+            mensagem: `O jogo "${j.titulo}" foi cancelado por não ter jogadores suficientes (menos de metade das vagas preenchidas).`,
+            jogoId: j.id,
+          });
+        } catch {}
+      }
+    }
+    if (jogos.recordset.length > 0) {
+      console.log(`[Scheduler] autoCancelarJogosVazios: ${jogos.recordset.length} jogo(s) cancelado(s).`);
+    }
+  } catch (err) {
+    console.error('[Scheduler] autoCancelarJogosVazios erro:', err.message);
+  }
+}
+
+/**
+ * Envia lembretes 2h antes do jogo a todos os participantes confirmados.
+ */
+async function enviarLembretes2H() {
+  try {
+    const jogos = await query(`
+      SELECT j.id, j.titulo, j.local, j.regiao
+      FROM jogos j
+      WHERE j.estado IN ('aberto','cheio')
+        AND j.lembrete_2h_enviado IS NULL
+        AND j.data_jogo BETWEEN DATEADD(MINUTE, 110, GETUTCDATE()) AND DATEADD(MINUTE, 130, GETUTCDATE())
+    `);
+    for (const j of jogos.recordset) {
+      const inscritos = await query(
+        `SELECT utilizador_id FROM inscricoes WHERE jogo_id=@id AND estado='confirmado'`,
+        { id: j.id }
+      );
+      const local = j.local || j.regiao || 'local definido';
+      for (const insc of inscritos.recordset) {
+        try {
+          await criarNotificacao({
+            utilizadorId: insc.utilizador_id,
+            tipo: 'lembrete',
+            titulo: '⚽ O teu jogo começa em 2 horas!',
+            mensagem: `"${j.titulo}" em ${local}. Não te esqueças!`,
+            jogoId: j.id,
+            acaoUrl: `/jogos/${j.id}`,
+          });
+        } catch {}
+      }
+      await query(
+        `UPDATE jogos SET lembrete_2h_enviado=1, updated_at=GETUTCDATE() WHERE id=@id`,
+        { id: j.id }
+      );
+    }
+    if (jogos.recordset.length > 0) {
+      console.log(`[Scheduler] enviarLembretes2H: ${jogos.recordset.length} lembrete(s) enviado(s).`);
+    }
+  } catch (err) {
+    console.error('[Scheduler] enviarLembretes2H erro:', err.message);
+  }
+}
+
 // Processa deadlines de reservas pendentes (Fase D).
 async function processarReservasPendentes() {
   try {
@@ -348,6 +436,8 @@ function iniciarScheduler() {
     await runOnce('sincronizarTotaisVitorias', sincronizarTotaisVitorias);
     await runOnce('processarReservasPendentes', processarReservasPendentes);
     await runOnce('avaliarConquistasTodos', avaliarConquistasTodos);
+    await runOnce('autoCancelarJogosVazios', autoCancelarJogosVazios);
+    await runOnce('enviarLembretes2H', enviarLembretes2H);
   })();
 
   // Tick 5min: apenas trabalho "leve" e recorrente.
@@ -358,6 +448,8 @@ function iniciarScheduler() {
     await runOnce('gerarVotacoesMVP', gerarVotacoesMVP);
     await runOnce('processarNoShows', processarNoShows);
     await runOnce('processarReservasPendentes', processarReservasPendentes);
+    await runOnce('autoCancelarJogosVazios', autoCancelarJogosVazios);
+    await runOnce('enviarLembretes2H', enviarLembretes2H);
   }, 5 * 60 * 1000);
 
   // Tick 1h: agregações pesadas + avaliação de conquistas.

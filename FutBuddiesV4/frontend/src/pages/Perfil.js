@@ -33,7 +33,7 @@ export default function Perfil() {
   };
   const [perfil, setPerfil] = useState(null);
   const [equipa, setEquipa] = useState(null);
-  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true, receberEmails: true });
+  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true, receberEmails: true, regiaoPreferida: '', disponivelJogar: false, disponivelRegiao: '', disponivelAte: '' });
   const [passForm, setPassForm] = useState({ passwordAtual:'', novaPassword:'', confirmar:'' });
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -51,7 +51,12 @@ export default function Perfil() {
       setForm({ posicao: u.posicao||'', cidade: u.cidade||'', bio: u.bio||'',
         nickname: u.nickname||'', pePreferido: u.pe_preferido||'', regiao: u.regiao||'', fotoUrl: u.foto_url||'',
         perfilPublico: u.perfil_publico === undefined ? true : !!u.perfil_publico,
-        receberEmails: u.receber_emails === undefined ? true : !!u.receber_emails });
+        receberEmails: u.receber_emails === undefined ? true : !!u.receber_emails,
+        regiaoPreferida: u.regiao_preferida || '',
+        disponivelJogar: !!u.disponivel_jogar,
+        disponivelRegiao: u.disponivel_regiao || '',
+        disponivelAte: u.disponivel_ate ? new Date(u.disponivel_ate).toISOString().slice(0,10) : '',
+      });
     }).catch(() => addToast('Erro ao carregar perfil.', 'error'))
       .finally(() => setLoading(false));
   }, []);
@@ -60,11 +65,18 @@ export default function Perfil() {
     e.preventDefault();
     setGuardando(true);
     try {
-      await api.put('/utilizadores/perfil', form);
+      await api.put('/utilizadores/perfil', {
+        ...form,
+        disponivelAte: form.disponivelAte || null,
+        disponivelRegiao: form.disponivelRegiao || null,
+      });
       addToast('Perfil atualizado!', 'success');
       setPerfil(p => ({ ...p, ...form, pe_preferido: form.pePreferido, foto_url: form.fotoUrl,
         perfil_publico: form.perfilPublico ? 1 : 0,
-        receber_emails: form.receberEmails ? 1 : 0 }));
+        receber_emails: form.receberEmails ? 1 : 0,
+        regiao_preferida: form.regiaoPreferida || null,
+        disponivel_jogar: form.disponivelJogar ? 1 : 0,
+      }));
       atualizarUtilizador({ nickname: form.nickname, foto_url: form.fotoUrl });
     } catch { addToast('Erro ao guardar.', 'error'); }
     finally { setGuardando(false); }
@@ -287,6 +299,90 @@ export default function Perfil() {
                     }} />
                   </span>
                 </label>
+              </div>
+
+              {/* Região preferida para alertas */}
+              <div className="form-field">
+                <label>Região preferida (recebe alertas de novos jogos)</label>
+                <select value={form.regiaoPreferida} onChange={e => setForm({ ...form, regiaoPreferida: e.target.value })}>
+                  <option value="">Sem preferência</option>
+                  {REGIOES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+
+              {/* Disponível para jogar */}
+              <div className="form-field" style={{
+                background: 'var(--bg-elev-1)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                padding: '0.9rem 1rem',
+              }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', cursor: 'pointer', marginBottom: form.disponivelJogar ? '0.75rem' : 0 }}>
+                  <span>
+                    <strong style={{ display: 'block', fontSize: '0.92rem' }}>
+                      {form.disponivelJogar ? '🟢 Disponível para jogar' : '⚫ Indisponível para jogar'}
+                    </strong>
+                    <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: 1.4, display: 'block', marginTop: 4 }}>
+                      Aparece na lista de jogadores disponíveis na página de Jogos.
+                    </small>
+                  </span>
+                  <span style={{
+                    position: 'relative',
+                    width: 44, height: 24, flexShrink: 0,
+                    background: form.disponivelJogar ? '#22c55e' : 'var(--bg-elev-3)',
+                    borderRadius: 999,
+                    transition: 'background 0.2s',
+                  }}>
+                    <input type="checkbox" checked={form.disponivelJogar}
+                      onChange={e => setForm({ ...form, disponivelJogar: e.target.checked })}
+                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0, cursor: 'pointer' }} />
+                    <span style={{
+                      position: 'absolute',
+                      top: 3, left: form.disponivelJogar ? 23 : 3,
+                      width: 18, height: 18,
+                      background: '#fff', borderRadius: '50%',
+                      transition: 'left 0.2s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    }} />
+                  </span>
+                </label>
+                {form.disponivelJogar && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <div className="form-field" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.78rem' }}>Região disponível</label>
+                      <select value={form.disponivelRegiao} onChange={e => setForm({ ...form, disponivelRegiao: e.target.value })}>
+                        <option value="">Qualquer região</option>
+                        {REGIOES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-field" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.78rem' }}>Disponível até</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        <input type="date" value={form.disponivelAte}
+                          onChange={e => setForm({ ...form, disponivelAte: e.target.value })}
+                          style={{ fontSize: '0.85rem' }} />
+                        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                          {[
+                            { label: 'Este fim-de-semana', days: (() => { const d = new Date(); const day = d.getDay(); return day === 0 ? 0 : 7 - day; })() },
+                            { label: 'Esta semana', days: 7 },
+                            { label: 'Este mês', days: 30 },
+                          ].map(({ label, days }) => (
+                            <button key={label} type="button"
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: '0.72rem', padding: '2px 6px' }}
+                              onClick={() => {
+                                const d = new Date();
+                                d.setDate(d.getDate() + days);
+                                setForm(f => ({ ...f, disponivelAte: d.toISOString().slice(0, 10) }));
+                              }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button type="submit" className="btn btn-primary" disabled={guardando}>

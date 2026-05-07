@@ -67,6 +67,9 @@ async function getPerfil(req, res) {
                   ${temPP ? 'perfil_publico,' : ''}
                   COALESCE(receber_emails, 1) AS receber_emails,
                   ${temRC ? 'referral_code,' : ''}
+                  regiao_preferida,
+                  COALESCE(disponivel_jogar, 0) AS disponivel_jogar,
+                  disponivel_regiao, disponivel_ate,
                   created_at, ultimo_login`;
     const resultado = await query(
       `SELECT ${cols} FROM utilizadores WHERE id = @id`,
@@ -88,28 +91,45 @@ async function getPerfil(req, res) {
 // PUT /api/utilizadores/perfil
 async function updatePerfil(req, res) {
   try {
-    const { posicao, cidade, bio, nickname, pePreferido, regiao, fotoUrl, perfilPublico, receberEmails } = req.body;
+    const { posicao, cidade, bio, nickname, pePreferido, regiao, fotoUrl, perfilPublico, receberEmails,
+            regiaoPreferida, disponivelJogar, disponivelRegiao, disponivelAte } = req.body;
     const temPP = await temColunaPerfilPublico();
     const perfilPubBit = (perfilPublico === undefined || perfilPublico === null) ? null : (perfilPublico ? 1 : 0);
     const receberBit  = (receberEmails  === undefined || receberEmails  === null) ? null : (receberEmails  ? 1 : 0);
+    const disponivelBit = (disponivelJogar === undefined || disponivelJogar === null) ? null : (disponivelJogar ? 1 : 0);
     const setPP = temPP ? `, perfil_publico = COALESCE(@perfilPub, perfil_publico)` : '';
     const params = { posicao: posicao||null, cidade: cidade||null, bio: bio||null,
         nickname: nickname||null, pePreferido: pePreferido||null,
-        regiao: regiao||null, fotoUrl: fotoUrl||null, id: req.utilizador.id };
+        regiao: regiao||null, fotoUrl: fotoUrl||null, id: req.utilizador.id,
+        regiaoPreferida: regiaoPreferida !== undefined ? (regiaoPreferida || null) : null,
+        disponivelRegiao: disponivelRegiao !== undefined ? (disponivelRegiao || null) : null,
+        disponivelAte: disponivelAte ? new Date(disponivelAte) : null,
+    };
     if (temPP) params.perfilPub = perfilPubBit;
     params.receber = receberBit;
+    params.disponivelBit = disponivelBit;
+
+    // Build dynamic SET for optional columns
+    const setDisponivel = disponivelBit !== null
+      ? `, disponivel_jogar = @disponivelBit, disponivel_regiao = COALESCE(@disponivelRegiao, disponivel_regiao), disponivel_ate = @disponivelAte`
+      : '';
+    const setRegiaoPreferida = regiaoPreferida !== undefined
+      ? `, regiao_preferida = @regiaoPreferida`
+      : '';
+
     await query(
       `UPDATE utilizadores
        SET posicao=@posicao, cidade=@cidade, bio=@bio, nickname=@nickname,
            pe_preferido=@pePreferido, regiao=@regiao, foto_url=@fotoUrl,
            receber_emails = COALESCE(@receber, receber_emails)
-           ${setPP},
+           ${setPP}${setRegiaoPreferida}${setDisponivel},
            updated_at=GETUTCDATE()
        WHERE id=@id`,
       params
     );
     res.json({ sucesso: true, mensagem: 'Perfil atualizado!' });
   } catch (err) {
+    console.error('[Perfil] updatePerfil:', err);
     res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
   }
 }
@@ -545,4 +565,77 @@ async function getHistoricoCSV(req, res) {
   }
 }
 
-module.exports = { getPerfil, updatePerfil, alterarPassword, eliminarConta, getPerfilPublico, getDashboard, getUtilizadores, getTodosJogos, updateRole, toggleAtivo, getMeusJogos, getHistorico, getHistoricoCSV };
+// GET /api/quadro-honra?regiao=
+async function quadroHonra(req, res) {
+  try {
+    const { regiao } = req.query;
+    let whereRegiao = '';
+    const params = {};
+    if (regiao) { whereRegiao = 'AND j.regiao = @regiao'; params.regiao = regiao; }
+
+    const ativos = await query(`
+      SELECT TOP 10 u.id, u.nome, u.nickname, u.foto_url, u.nivel,
+             COUNT(DISTINCT i.jogo_id) AS jogos_semana
+      FROM inscricoes i
+      JOIN utilizadores u ON u.id = i.utilizador_id
+      JOIN jogos j ON j.id = i.jogo_id
+      WHERE i.estado = 'confirmado'
+        AND j.data_jogo >= DATEADD(DAY, -7, GETUTCDATE())
+        AND j.estado <> 'cancelado'
+        ${whereRegiao}
+      GROUP BY u.id, u.nome, u.nickname, u.foto_url, u.nivel
+      ORDER BY jogos_semana DESC
+    `, params);
+
+    let avaliados = { recordset: [] };
+    try {
+      avaliados = await query(`
+        SELECT TOP 10 u.id, u.nome, u.nickname, u.foto_url,
+               AVG(CAST(av.nota AS FLOAT)) AS media_nota,
+               COUNT(*) AS total_avaliacoes
+        FROM avaliacoes_jogadores av
+        JOIN utilizadores u ON u.id = av.avaliado_id
+        JOIN jogos j ON j.id = av.jogo_id
+        WHERE av.created_at >= DATEADD(DAY, -30, GETUTCDATE())
+        ${whereRegiao}
+        GROUP BY u.id, u.nome, u.nickname, u.foto_url
+        HAVING COUNT(*) >= 2
+        ORDER BY media_nota DESC
+      `, params);
+    } catch (e) {
+      console.warn('[QuadroHonra] avaliados query falhou:', e.message);
+    }
+
+    res.json({ sucesso: true, maisAtivos: ativos.recordset, melhorAvaliados: avaliados.recordset });
+  } catch (err) {
+    console.error('[QuadroHonra] erro:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+// GET /api/jogadores/disponiveis?regiao=
+async function jogadoresDisponiveis(req, res) {
+  try {
+    const { regiao } = req.query;
+    let whereRegiao = '';
+    const params = {};
+    if (regiao) { whereRegiao = 'AND (disponivel_regiao = @regiao OR disponivel_regiao IS NULL)'; params.regiao = regiao; }
+
+    const result = await query(`
+      SELECT id, nome, nickname, foto_url, disponivel_regiao, disponivel_ate
+      FROM utilizadores
+      WHERE disponivel_jogar = 1
+        AND (disponivel_ate IS NULL OR disponivel_ate > GETUTCDATE())
+        AND ativo = 1
+        ${whereRegiao}
+      ORDER BY nome ASC
+    `, params);
+
+    res.json({ sucesso: true, jogadores: result.recordset });
+  } catch (err) {
+    console.error('[Disponiveis] erro:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+module.exports = { getPerfil, updatePerfil, alterarPassword, eliminarConta, getPerfilPublico, getDashboard, getUtilizadores, getTodosJogos, updateRole, toggleAtivo, getMeusJogos, getHistorico, getHistoricoCSV, quadroHonra, jogadoresDisponiveis };
