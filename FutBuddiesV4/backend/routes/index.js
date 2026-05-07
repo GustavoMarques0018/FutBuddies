@@ -221,6 +221,23 @@ if (process.env.NODE_ENV !== 'production') {
 // ── UPLOAD ────────────────────────────────────────────────
 router.post('/upload/imagem', autenticar, upload.single('imagem'), uploadImagem);
 
+// ── GIF PROXY (evita CORS do browser → GIPHY) ─────────────
+router.get('/gifs', async (req, res) => {
+  try {
+    const key = process.env.GIPHY_KEY || 'dc6zaTOxFJmzC';
+    const { q, limit = 20 } = req.query;
+    const endpoint = q ? 'search' : 'trending';
+    const params = new URLSearchParams({ api_key: key, rating: 'g', lang: 'pt', limit });
+    if (q) params.set('q', q);
+    const r = await fetch(`https://api.giphy.com/v1/gifs/${endpoint}?${params}`);
+    if (!r.ok) return res.status(r.status).json({ sucesso: false });
+    const json = await r.json();
+    res.json({ sucesso: true, data: json.data || [] });
+  } catch (e) {
+    res.status(500).json({ sucesso: false });
+  }
+});
+
 // ── HEALTH ────────────────────────────────────────────────
 router.get('/health', (req, res) => res.json({ sucesso: true, mensagem: 'FutBuddies API online!', timestamp: new Date() }));
 
