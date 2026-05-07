@@ -34,11 +34,13 @@ export default function GaleriaFotos({ jogoId, podeAdicionar, isCriador, utiliza
       fd.append('imagem', file);
       // No Content-Type header — axios detects FormData automatically
       const upRes = await api.post('/upload/imagem', fd);
+      if (!upRes.data?.sucesso) throw new Error(upRes.data?.mensagem || 'Upload falhou.');
       const url = upRes.data.url;
       await api.post(`/jogos/${jogoId}/fotos`, { url });
       carregarFotos();
     } catch (err) {
-      alert(err?.response?.data?.mensagem || 'Erro ao carregar foto.');
+      const msg = err?.response?.data?.mensagem || err?.message || 'Erro ao carregar foto.';
+      alert(msg);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
