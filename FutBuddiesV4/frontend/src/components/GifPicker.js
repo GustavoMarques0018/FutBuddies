@@ -1,19 +1,20 @@
 // ============================================================
-//  FutBuddies - GIF Picker (Tenor API v1)
-//  Chave de demo Tenor — substitui por REACT_APP_TENOR_KEY em produção
-//  https://tenor.com/developer/keyregistration
+//  FutBuddies - GIF Picker (GIPHY API)
+//  Usa REACT_APP_GIPHY_KEY em produção; fallback para a chave
+//  pública beta da GIPHY (adequada para demos / projetos académicos).
+//  https://developers.giphy.com/
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './GifPicker.css';
 
-const TENOR_KEY = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
-const BASE      = 'https://api.tenor.com/v1';
+const GIPHY_KEY = process.env.REACT_APP_GIPHY_KEY || 'dc6zaTOxFJmzC';
+const BASE      = 'https://api.giphy.com/v1/gifs';
 
-async function fetchTenor(endpoint, params = {}) {
-  const qs = new URLSearchParams({ key: TENOR_KEY, locale: 'pt_PT', contentfilter: 'low', ...params });
-  const r   = await fetch(`${BASE}/${endpoint}?${qs}`);
-  if (!r.ok) throw new Error(`Tenor ${r.status}`);
+async function fetchGiphy(endpoint, params = {}) {
+  const qs = new URLSearchParams({ api_key: GIPHY_KEY, rating: 'g', lang: 'pt', ...params });
+  const r  = await fetch(`${BASE}/${endpoint}?${qs}`);
+  if (!r.ok) throw new Error(`GIPHY ${r.status}`);
   return r.json();
 }
 
@@ -33,44 +34,37 @@ export default function GifPicker({ onSelect, onFechar }) {
     return () => window.removeEventListener('keydown', h);
   }, [onFechar]);
 
-  // Carregar trending ao abrir
-  useEffect(() => {
+  const carregarTrending = useCallback(() => {
     setLoading(true);
     setErro(false);
-    fetchTenor('trending', { limit: 20, media_filter: 'minimal' })
-      .then(d => { setLista(d.results || []); setErro(false); })
+    fetchGiphy('trending', { limit: 20 })
+      .then(d => { setLista(d.data || []); setErro(false); })
       .catch(() => setErro(true))
       .finally(() => setLoading(false));
   }, []);
 
+  // Carregar trending ao abrir
+  useEffect(() => { carregarTrending(); }, [carregarTrending]);
+
   // Pesquisa com debounce 400ms
   const pesquisar = useCallback((q) => {
     clearTimeout(timerRef.current);
-    if (!q.trim()) {
-      // Voltar a trending
-      setLoading(true);
-      setErro(false);
-      fetchTenor('trending', { limit: 20, media_filter: 'minimal' })
-        .then(d => { setLista(d.results || []); setErro(false); })
-        .catch(() => setErro(true))
-        .finally(() => setLoading(false));
-      return;
-    }
+    if (!q.trim()) { carregarTrending(); return; }
     timerRef.current = setTimeout(() => {
       setLoading(true);
       setErro(false);
-      fetchTenor('search', { q, limit: 24, media_filter: 'minimal' })
-        .then(d => { setLista(d.results || []); setErro(false); })
+      fetchGiphy('search', { q, limit: 24 })
+        .then(d => { setLista(d.data || []); setErro(false); })
         .catch(() => setErro(true))
         .finally(() => setLoading(false));
     }, 400);
-  }, []);
+  }, [carregarTrending]);
 
   useEffect(() => { pesquisar(query); }, [query, pesquisar]);
 
-  // Helpers para extrair URLs do formato Tenor
-  const thumb = (g) => g.media?.[0]?.tinygif?.url || g.media?.[0]?.gif?.url || '';
-  const gifUrl = (g) => g.media?.[0]?.gif?.url || '';
+  // Helpers para extrair URLs do formato GIPHY
+  const thumb  = (g) => g.images?.fixed_height_small?.url || g.images?.downsized?.url || g.images?.original?.url || '';
+  const gifUrl = (g) => g.images?.original?.url || g.images?.downsized?.url || '';
 
   return (
     <div className="gif-backdrop" onClick={onFechar}>
@@ -118,7 +112,7 @@ export default function GifPicker({ onSelect, onFechar }) {
           })}
         </div>
 
-        <p className="gif-credit">Powered by Tenor</p>
+        <p className="gif-credit">Powered by GIPHY</p>
       </div>
     </div>
   );

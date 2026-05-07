@@ -98,6 +98,13 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
                   alt="imagem"
                   className="chat-img"
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement.insertAdjacentHTML(
+                      'afterend',
+                      '<span style="font-size:0.78rem;color:var(--text-muted);padding:0.4rem 0;display:block">📷 Imagem indisponível</span>'
+                    );
+                  }}
                 />
               </a>
             )}
@@ -108,6 +115,7 @@ function Mensagem({ msg, utilizadorId, onReacao }) {
                 alt="gif"
                 className="chat-img chat-gif"
                 loading="lazy"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
             {/* Texto */}

@@ -101,6 +101,14 @@ export default function GaleriaFotos({ jogoId, podeAdicionar, isCriador, utiliza
                 style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.2s' }}
                 onMouseOver={e => e.currentTarget.style.transform = 'scale(1.03)'}
                 onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement.style.background = 'var(--bg-elev-2)';
+                  e.currentTarget.parentElement.style.display = 'flex';
+                  e.currentTarget.parentElement.style.alignItems = 'center';
+                  e.currentTarget.parentElement.style.justifyContent = 'center';
+                  e.currentTarget.parentElement.innerHTML = '<span style="font-size:1.5rem">📷</span>';
+                }}
               />
               {(foto.utilizador_id === utilizadorId || isCriador) && (
                 <button

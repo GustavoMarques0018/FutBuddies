@@ -113,7 +113,14 @@
 /* ── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* Previne scroll horizontal global sem interferir com o scroll vertical
+     nem criar um novo scroll container (ao contrário de overflow-x:hidden).
+     Colocado no html (scroll container raiz) — seguro em iOS Safari. */
+  overflow-x: clip;
+}
 
 body {
   font-family: var(--font-body);
@@ -606,7 +613,9 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
 .skip-link:focus { left: 0; }
 
 /* ── Page wrapper padding (under fixed navbar) ─────────── */
-/* NOTE: class names must match the actual JSX className used in each page */
+/* NOTE: class names must match the actual JSX className used in each page.
+   overflow-x is handled at html level — NOT here — to avoid the iOS Safari
+   bug where overflow-x on page wrappers blocks touch vertical scroll. */
 .page-wrap, main, .home, .jogos-page, .equipas-page, .perfil-page,
 .sobre-page, .auth-page, .admin-page, .amigos-page, .equipa-detalhe-page,
 .jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page,
@@ -616,17 +625,6 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
 .campos-page {
   padding-top: calc(var(--navbar-h) + env(safe-area-inset-top, 0px) + 1.5rem);
   min-height: 100vh;
-  /* Clip horizontal por página, não no body/root (que bloquearia scroll) */
-  overflow-x: clip;
-}
-@supports not (overflow-x: clip) {
-  .page-wrap, main, .home, .jogos-page, .equipas-page, .perfil-page,
-  .sobre-page, .auth-page, .admin-page, .amigos-page, .equipa-detalhe-page,
-  .jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page,
-  .perfil-pub-page, .perfil-publico-page,
-  .dono-page, .suporte-page, .meus-page, .meus-jogos-page,
-  .reportar-page, .reportar-jogo-page, .nao-encontrado-page,
-  .campos-page { overflow-x: hidden; }
 }
 
 /* ── Utilitários ────────────────────────────────────────── */
