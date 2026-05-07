@@ -22,7 +22,12 @@ const suporteCtrl      = require('../controllers/suporteController');
 const avalCampoCtrl    = require('../controllers/avaliacoesCampoController');
 const testeCtrl        = require('../controllers/testeController');
 const { upload, uploadImagem } = require('../controllers/uploadController');
-const avalJogCtrl = require('../controllers/avaliacoesJogadoresController');
+const avalJogCtrl      = require('../controllers/avaliacoesJogadoresController');
+const feedCtrl         = require('../controllers/feedController');
+const desafiosCtrl     = require('../controllers/desafiosController');
+const balanceamentoCtrl= require('../controllers/balanceamentoController');
+const avalPisoCtrl     = require('../controllers/avaliacaoPisoController');
+const statsCtrl        = require('../controllers/estatisticasController');
 
 // ── AUTH ──────────────────────────────────────────────────
 router.post('/auth/registar', authCtrl.registar);
@@ -47,6 +52,7 @@ router.delete('/jogos/:id',           autenticar, isAdmin, jogosCtrl.eliminarJog
 router.get('/jogos/:id/chat',                    autenticar, chatCtrl.getMensagens);
 router.post('/jogos/:id/chat',                   autenticar, chatCtrl.enviarMensagem);
 router.post('/jogos/:id/chat/:msgId/reacao',     autenticar, chatCtrl.toggleReacao);
+router.get('/jogos/:id/chat/resumo',             autenticar, chatCtrl.resumirChat);
 
 // ── UTILIZADORES ──────────────────────────────────────────
 router.get('/quadro-honra',            autenticarOpcional, utilizadoresCtrl.quadroHonra);
@@ -217,6 +223,32 @@ router.put('/admin/suporte/:id',         autenticar, isAdmin, suporteCtrl.atuali
 if (process.env.NODE_ENV !== 'production') {
   router.post('/test/create-session', autenticar, isAdmin, testeCtrl.criarSessaoTeste);
 }
+
+// ── FEED DE ATIVIDADE ─────────────────────────────────────
+router.get('/feed', autenticar, feedCtrl.getFeed);
+
+// ── DESAFIOS ──────────────────────────────────────────────
+router.get('/desafios',                    autenticar, desafiosCtrl.listar);
+router.post('/desafios',                   autenticar, desafiosCtrl.criar);
+router.put('/desafios/:id/responder',      autenticar, desafiosCtrl.responder);
+router.get('/desafios/:id/leaderboard',    autenticar, desafiosCtrl.leaderboard);
+
+// ── BALANCEAMENTO ─────────────────────────────────────────
+router.get('/jogos/:id/balancear',         autenticar, balanceamentoCtrl.sugerir);
+router.post('/jogos/:id/balancear/aceitar',autenticar, balanceamentoCtrl.aceitar);
+
+// ── AVALIAÇÃO PISO ────────────────────────────────────────
+router.post('/jogos/:jogoId/avaliar-piso', autenticar,         avalPisoCtrl.submeterPiso);
+router.get('/campos/:id/avaliacoes-piso',  autenticarOpcional, avalPisoCtrl.listarPiso);
+
+// ── ESTATÍSTICAS AVANÇADAS ────────────────────────────────
+router.get('/jogadores/:id/forma',         autenticarOpcional, statsCtrl.analiseFoma);
+router.get('/jogadores/:id/posicao-ideal', autenticarOpcional, statsCtrl.posicaoIdeal);
+router.get('/jogadores/:id/h2h/:outroId',  autenticarOpcional, statsCtrl.headToHead);
+router.get('/jogadores/:id/streak',        autenticarOpcional, statsCtrl.getStreak);
+router.get('/jogos/:id/previsao-desistencias', autenticar,     statsCtrl.previsaoDesistencias);
+router.get('/campos/:id/historico',        autenticarOpcional, statsCtrl.historicoCampo);
+router.post('/traduzir',                   autenticar,         statsCtrl.traduzir);
 
 // ── UPLOAD ────────────────────────────────────────────────
 // Wraps multer so that its errors (file too large, wrong type) are returned as

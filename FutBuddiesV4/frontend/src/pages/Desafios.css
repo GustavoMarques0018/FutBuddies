@@ -1,0 +1,39 @@
+.desafios-page { padding-top: calc(var(--navbar-h) + env(safe-area-inset-top,0px) + 1.5rem); min-height: 100vh; }
+
+.desafio-card {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 0.625rem;
+  transition: border-color 0.15s;
+}
+.desafio-card.aceite   { border-left: 3px solid var(--success); }
+.desafio-card.pending  { border-left: 3px solid var(--warning); }
+.desafio-card.recusado { opacity: 0.6; }
+
+.desafio-top { display: flex; justify-content: space-between; align-items: flex-start; }
+
+.desafio-tipo { margin: 0; font-weight: 600; font-size: 0.9rem; }
+.desafio-sub  { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+
+.desafio-lb {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.desafio-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.secao-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 1.25rem 0 0.5rem;
+}
