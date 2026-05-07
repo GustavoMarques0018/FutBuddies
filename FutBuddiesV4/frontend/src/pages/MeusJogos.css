@@ -3,9 +3,8 @@
    ============================================================ */
 
 .meus-page {
-  padding: 2rem 0 4rem;
-  min-height: calc(100vh - var(--navbar-h));
-  min-height: calc(100dvh - var(--navbar-h));
+  padding-bottom: 4rem;
+  /* padding-top comes from index.css page-wrapper rule */
 }
 
 .meus-header {

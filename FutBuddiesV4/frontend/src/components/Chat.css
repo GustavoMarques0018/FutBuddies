@@ -76,6 +76,10 @@
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+  /* Mine messages: align children (bubble, reactions) to the right */
+}
+.chat-msg.mine .chat-bubble-wrap {
+  align-items: flex-end;
 }
 .chat-autor {
   font-size: 0.72rem;

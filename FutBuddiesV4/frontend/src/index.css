@@ -606,10 +606,13 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
 .skip-link:focus { left: 0; }
 
 /* ── Page wrapper padding (under fixed navbar) ─────────── */
+/* NOTE: class names must match the actual JSX className used in each page */
 .page-wrap, main, .home, .jogos-page, .equipas-page, .perfil-page,
 .sobre-page, .auth-page, .admin-page, .amigos-page, .equipa-detalhe-page,
-.jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page, .perfil-publico-page,
-.dono-page, .suporte-page, .meus-jogos-page, .reportar-jogo-page, .nao-encontrado-page,
+.jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page,
+.perfil-pub-page, .perfil-publico-page,
+.dono-page, .suporte-page, .meus-page, .meus-jogos-page,
+.reportar-page, .reportar-jogo-page, .nao-encontrado-page,
 .campos-page {
   padding-top: calc(var(--navbar-h) + env(safe-area-inset-top, 0px) + 1.5rem);
   min-height: 100vh;
@@ -619,8 +622,10 @@ html { scroll-padding-top: calc(var(--navbar-h) + 1rem); }
 @supports not (overflow-x: clip) {
   .page-wrap, main, .home, .jogos-page, .equipas-page, .perfil-page,
   .sobre-page, .auth-page, .admin-page, .amigos-page, .equipa-detalhe-page,
-  .jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page, .perfil-publico-page,
-  .dono-page, .suporte-page, .meus-jogos-page, .reportar-jogo-page, .nao-encontrado-page,
+  .jogo-detalhe-page, .criar-jogo-page, .criar-equipa-page,
+  .perfil-pub-page, .perfil-publico-page,
+  .dono-page, .suporte-page, .meus-page, .meus-jogos-page,
+  .reportar-page, .reportar-jogo-page, .nao-encontrado-page,
   .campos-page { overflow-x: hidden; }
 }
 
