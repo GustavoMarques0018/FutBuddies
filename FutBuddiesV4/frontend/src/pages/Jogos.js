@@ -7,9 +7,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../utils/api';
-import { REGIOES, NIVEIS, NIVEL_COR, getRegiaoGuardada, guardarRegiao } from '../utils/constantes';
+import { REGIOES, NIVEIS, NIVEL_COR, getRegiaoGuardada, guardarRegiao, resolverImgUrl } from '../utils/constantes';
 import { IconBall, IconLock, IconStadium, IconMapPin, IconClock } from '../components/Icons';
 import Countdown from '../components/Countdown';
+import QuadroHonra from '../components/QuadroHonra';
 import './Jogos.css';
 
 // Carregamento dinâmico do mapa (evita carregar Leaflet se nunca abrir)
@@ -132,6 +133,7 @@ export default function Jogos() {
   // Data
   const [jogos, setJogos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [jogadoresDisponiveis, setJogadoresDisponiveis] = useState([]);
 
   // Search (debounced)
   const [pesquisa, setPesquisa] = useState('');
@@ -184,6 +186,16 @@ export default function Jogos() {
     return () => clearTimeout(t);
     // eslint-disable-next-line
   }, [pesquisa]);
+
+  // -------------------------------------------------------------------
+  // Load available players when region changes
+  // -------------------------------------------------------------------
+  useEffect(() => {
+    const params = regiao ? `?regiao=${encodeURIComponent(regiao)}` : '';
+    api.get(`/jogadores/disponiveis${params}`)
+      .then(res => setJogadoresDisponiveis(res.data.jogadores || []))
+      .catch(() => setJogadoresDisponiveis([]));
+  }, [regiao]);
 
   // -------------------------------------------------------------------
   // Region helper
@@ -362,6 +374,37 @@ export default function Jogos() {
             {jogosOrdenados.map(jogo => <JogoCard key={jogo.id} jogo={jogo} />)}
           </div>
         )}
+
+        {/* ── Jogadores Disponíveis ── */}
+        {jogadoresDisponiveis.length > 0 && (
+          <div className="card" style={{ marginTop: '2rem', padding: '1.25rem' }}>
+            <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.95rem', fontWeight: 700 }}>
+              🟢 Jogadores disponíveis{regiao ? ` em ${regiao}` : ''}
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {jogadoresDisponiveis.map(j => (
+                <Link
+                  key={j.id}
+                  to={`/jogadores/${j.id}`}
+                  style={{
+                    textDecoration: 'none', color: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.6rem',
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
+                  {j.nickname || j.nome}
+                  {j.disponivel_regiao && <span style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>· {j.disponivel_regiao}</span>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Quadro de Honra ── */}
+        <QuadroHonra regiaoInicial={regiao} />
       </div>
     </div>
   );

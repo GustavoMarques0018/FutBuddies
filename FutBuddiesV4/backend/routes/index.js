@@ -39,6 +39,8 @@ router.put('/jogos/:id',     autenticar,  jogosCtrl.editarJogo);
 router.post('/jogos/:id/inscrever',   autenticar, jogosCtrl.inscreverJogo);
 router.delete('/jogos/:id/inscrever', autenticar, jogosCtrl.cancelarInscricao);
 router.post('/jogos/:id/checkin',     autenticar, jogosCtrl.checkin);
+router.post('/jogos/:id/checkin-qr',  autenticar, jogosCtrl.checkinQR);
+router.post('/jogos/:id/cancelar',    autenticar, jogosCtrl.cancelarJogo);
 router.delete('/jogos/:id',           autenticar, isAdmin, jogosCtrl.eliminarJogo);
 
 // ── CHAT ──────────────────────────────────────────────────
@@ -47,6 +49,8 @@ router.post('/jogos/:id/chat',                   autenticar, chatCtrl.enviarMens
 router.post('/jogos/:id/chat/:msgId/reacao',     autenticar, chatCtrl.toggleReacao);
 
 // ── UTILIZADORES ──────────────────────────────────────────
+router.get('/quadro-honra',            autenticarOpcional, utilizadoresCtrl.quadroHonra);
+router.get('/jogadores/disponiveis',   autenticarOpcional, utilizadoresCtrl.jogadoresDisponiveis);
 router.get('/utilizadores/perfil',     autenticar, utilizadoresCtrl.getPerfil);
 router.put('/utilizadores/perfil',     autenticar, utilizadoresCtrl.updatePerfil);
 router.put('/utilizadores/password',   autenticar, utilizadoresCtrl.alterarPassword);
@@ -148,6 +152,18 @@ router.post('/jogos/:id/mvp',  autenticar, mvpCtrl.votar);
 router.get ('/jogos/:id/avaliar-jogadores', autenticar, avalJogCtrl.getJogadoresParaAvaliar);
 router.post('/jogos/:id/avaliar-jogadores', autenticar, avalJogCtrl.submeterAvaliacoes);
 router.get ('/jogadores/:id/avaliacoes',    autenticarOpcional, avalJogCtrl.getAvaliacoesPerfil);
+
+// ── Galeria de Fotos do Jogo ─────────────────────────────
+const fotosJogoCtrl = require('../controllers/fotosJogoController');
+router.get('/jogos/:id/fotos',                  autenticarOpcional, fotosJogoCtrl.getFotos);
+router.post('/jogos/:id/fotos',                 autenticar, fotosJogoCtrl.adicionarFoto);
+router.delete('/jogos/:jogoId/fotos/:fotoId',   autenticar, fotosJogoCtrl.eliminarFoto);
+
+// ── Votação por Mau Tempo ────────────────────────────────
+const votacaoTempoCtrl = require('../controllers/votacaoTempoController');
+router.get('/jogos/:id/votacao-tempo',           autenticar, votacaoTempoCtrl.getVotacao);
+router.post('/jogos/:id/votacao-tempo',          autenticar, votacaoTempoCtrl.votar);
+router.post('/jogos/:id/votacao-tempo/abrir',    autenticar, votacaoTempoCtrl.abrirVotacao);
 
 // ── Sorteio de equipas ───────────────────────────────────
 const sorteioCtrl = require('../controllers/sorteioController');

@@ -2,7 +2,7 @@
 //  FutBuddies - Detalhe do Jogo + Chat (WebSocket)
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
@@ -20,6 +20,10 @@ import AvaliarJogadores from '../components/AvaliarJogadores';
 import Chat from '../components/Chat';
 import DatePickerFB from '../components/DatePickerFB';
 import Avatar from '../components/Avatar';
+import PrevisaoTempo from '../components/PrevisaoTempo';
+import QRCheckin from '../components/QRCheckin';
+import GaleriaFotos from '../components/GaleriaFotos';
+import VotacaoTempo from '../components/VotacaoTempo';
 import './Jogos.css';
 
 export default function JogoDetalhe() {
@@ -42,6 +46,15 @@ export default function JogoDetalhe() {
   const [inscEquipaLoading, setInscEquipaLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [mostrarAvaliacao, setMostrarAvaliacao] = useState(false);
+  // Feature: Cancelar Jogo
+  const [cancelarModal, setCancelarModal] = useState(false);
+  const [cancelarMotivo, setCancelarMotivo] = useState('');
+  const [cancelarLoading, setCancelarLoading] = useState(false);
+
+  // QR checkin from URL param
+  const searchParams = new URLSearchParams(window.location.search);
+  const qrCheckin = searchParams.get('qr_checkin') === '1';
+  const qrCheckinDone = useRef(false);
   const carregarJogo = () => {
     api.get(`/jogos/${id}`)
       .then(res => {
@@ -67,6 +80,31 @@ export default function JogoDetalhe() {
       api.get('/utilizadores/me/equipa').then(res => setMinhaEquipa(res.data.equipa)).catch(() => {});
     }
   }, [id, isAuthenticated]);
+
+  // Socket listener for jogo_cancelado
+  useEffect(() => {
+    // We listen via polling fallback (socket is managed globally in App)
+    // The event will trigger via socket.on from the global socket context
+    // For simplicity, we poll on page focus
+    const handleFocus = () => { carregarJogo(); };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+    // eslint-disable-next-line
+  }, [id]);
+
+  // Auto-trigger QR checkin if param is set
+  useEffect(() => {
+    if (qrCheckin && jogo && inscrito && !jogo.meu_checkin && !qrCheckinDone.current) {
+      qrCheckinDone.current = true;
+      api.post(`/jogos/${id}/checkin-qr`)
+        .then(() => {
+          addToast('Check-in QR feito! Bom jogo ⚽', 'success');
+          carregarJogo();
+        })
+        .catch(e => addToast(e?.response?.data?.mensagem || 'Erro no check-in QR.', 'error'));
+    }
+    // eslint-disable-next-line
+  }, [jogo, inscrito]);
 
   const handleInscrever = async () => {
     if (!isAuthenticated) return navigate('/login');
@@ -114,8 +152,38 @@ export default function JogoDetalhe() {
       tipoJogo: jogo.tipo_jogo || '5x5',
       maxJogadores: jogo.max_jogadores || 10,
       nivel: jogo.nivel || 'Descontraído',
+      notasOrganizador: jogo.notas_organizador || '',
     });
     setEditando(true);
+  };
+
+  const handlePartilhar = async () => {
+    const url = window.location.href;
+    const vagas = jogo.vagas_disponiveis || 0;
+    const texto = `⚽ ${jogo.titulo} — ${formatarData(jogo.data_jogo)} em ${jogo.local || jogo.regiao}. ${vagas} vaga(s) disponível(is)! ${url}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: jogo.titulo, text: texto, url }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(texto);
+        addToast('Link copiado!', 'success', 2500);
+      } catch {
+        addToast('Não foi possível copiar.', 'error');
+      }
+    }
+  };
+
+  const handleCancelarJogo = async () => {
+    setCancelarLoading(true);
+    try {
+      await api.post(`/jogos/${id}/cancelar`, { motivo: cancelarMotivo });
+      addToast('Jogo cancelado com sucesso.', 'success');
+      navigate('/jogos');
+    } catch (err) {
+      addToast(err?.response?.data?.mensagem || 'Erro ao cancelar jogo.', 'error');
+    } finally {
+      setCancelarLoading(false);
+    }
   };
 
   const handleGuardarEdicao = async (e) => {
@@ -220,6 +288,16 @@ export default function JogoDetalhe() {
                   <IconPencil size="0.8em" /> Editar
                 </button>
               )}
+              {isCriador && jogo.estado !== 'cancelado' && !encerrado && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setCancelarModal(v => !v)}
+                  style={{ fontSize: '0.75rem', color: 'var(--danger, #dc2626)', borderColor: 'var(--danger, #dc2626)' }}
+                >
+                  🚫 Cancelar Jogo
+                </button>
+              )}
               {isCriador && encerrado && (
                 <button
                   type="button"
@@ -240,6 +318,11 @@ export default function JogoDetalhe() {
                   title="Sortear equipas balanceadas"
                 >
                   🎲 Sortear Equipas
+                </button>
+              )}
+              {jogo.estado !== 'cancelado' && !encerrado && (
+                <button className="btn btn-ghost btn-sm" onClick={handlePartilhar} style={{ fontSize: '0.75rem' }}>
+                  📤 Partilhar
                 </button>
               )}
             </div>
@@ -265,9 +348,27 @@ export default function JogoDetalhe() {
               </Link>
             </div>
 
+            {/* Previsão do Tempo */}
+            <PrevisaoTempo
+              lat={jogo.latitude}
+              lng={jogo.longitude}
+              dataJogo={jogo.data_jogo}
+              regiao={jogo.regiao}
+            />
+
             {/* Código de acesso para o criador (jogo privado) */}
             {isCriador && jogo.visibilidade === 'privado' && jogo.codigo_acesso && (
               <CodigoAcesso codigo={jogo.codigo_acesso} label="Código de Acesso" />
+            )}
+
+            {/* Notas privadas do organizador (só o criador vê) */}
+            {isCriador && !editando && jogo.notas_organizador && (
+              <div className="card" style={{ marginTop: '0.75rem', padding: '0.75rem 1rem', border: '1px solid var(--border)', background: 'var(--bg-elev-1)' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  🗒️ Notas privadas (só tu vês)
+                </p>
+                <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>{jogo.notas_organizador}</p>
+              </div>
             )}
 
             {/* Pagamento (campo parceiro) */}
@@ -370,6 +471,53 @@ export default function JogoDetalhe() {
             )}
           </div>
         </div>
+
+        {/* ── Cancelar Jogo — confirmação inline ── */}
+        {cancelarModal && (
+          <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--danger, #dc2626)', padding: '1.25rem', background: 'rgba(220,38,38,0.05)' }}>
+            <h4 style={{ margin: '0 0 0.75rem', color: 'var(--danger, #dc2626)' }}>🚫 Confirmar cancelamento</h4>
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>
+                Motivo (opcional)
+              </label>
+              <textarea
+                placeholder="Ex: Mau tempo, campo indisponível..."
+                value={cancelarMotivo}
+                onChange={e => setCancelarMotivo(e.target.value.slice(0, 200))}
+                rows={2}
+                style={{ resize: 'vertical', width: '100%' }}
+              />
+              <small style={{ color: 'var(--text-muted)' }}>{cancelarMotivo.length}/200</small>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-sm"
+                onClick={handleCancelarJogo}
+                disabled={cancelarLoading}
+                style={{ background: 'var(--danger, #dc2626)', color: '#fff', borderColor: 'var(--danger, #dc2626)' }}
+              >
+                {cancelarLoading ? '⏳ A cancelar...' : '✓ Confirmar Cancelamento'}
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => { setCancelarModal(false); setCancelarMotivo(''); }}
+                disabled={cancelarLoading}
+              >
+                Não cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Votação por Mau Tempo ── */}
+        {!encerrado && (inscrito || isCriador) && (
+          <VotacaoTempo
+            jogo={jogo}
+            isCriador={isCriador}
+            isInscrito={inscrito}
+            onAtualizar={carregarJogo}
+          />
+        )}
 
         {/* ── Placard pós-jogo (Fase C) ── */}
         {encerrado && (
@@ -546,6 +694,17 @@ export default function JogoDetalhe() {
             )}
           </div>
 
+          {/* QR Check-in (modo qrcode) */}
+          {jogo.modo_checkin === 'qrcode' && !encerrado && jogo.estado !== 'cancelado' && isAuthenticated && (
+            <div style={{ marginBottom: '1rem' }}>
+              {isCriador ? (
+                <QRCheckin jogo={jogo} isCriador={true} jaFezCheckin={false} onCheckin={carregarJogo} />
+              ) : inscrito ? (
+                <QRCheckin jogo={jogo} isCriador={false} jaFezCheckin={!!jogo.meu_checkin} onCheckin={carregarJogo} />
+              ) : null}
+            </div>
+          )}
+
           {/* Chat */}
           {isAuthenticated ? (
             <Chat
@@ -563,6 +722,14 @@ export default function JogoDetalhe() {
             </div>
           )}
         </div>
+
+        {/* Galeria de Fotos */}
+        <GaleriaFotos
+          jogoId={parseInt(id)}
+          podeAdicionar={inscrito || isCriador}
+          isCriador={isCriador}
+          utilizadorId={utilizador?.id}
+        />
 
         {/* Modal de Edição */}
         {editando && (
@@ -633,6 +800,19 @@ export default function JogoDetalhe() {
                       );
                     })}
                   </div>
+                </div>
+                <div className="form-field">
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>
+                    🗒️ Notas privadas (só tu vês)
+                  </label>
+                  <textarea
+                    value={editForm.notasOrganizador || ''}
+                    onChange={e => setEditForm({ ...editForm, notasOrganizador: e.target.value })}
+                    rows={3}
+                    maxLength={1000}
+                    placeholder="Ex: Trazer coletes, bola no carro do João..."
+                    style={{ resize: 'vertical' }}
+                  />
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button type="button" className="btn btn-ghost" onClick={() => setEditando(false)}>Cancelar</button>

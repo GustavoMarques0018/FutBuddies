@@ -130,6 +130,8 @@ async function obterJogo(req, res) {
               j.max_jogadores, j.estado, j.visibilidade, j.codigo_acesso, j.modo_jogo, j.criador_id, j.created_at,
               j.tipo_local, j.campo_id, j.modelo_pagamento, j.preco_total_cents,
               j.preco_por_jogador_cents, j.reserva_estado, j.deadline_pagamento,
+              j.latitude, j.longitude,
+              j.notas_organizador, j.modo_checkin, j.votacao_tempo_aberta,
               u.nome AS criador_nome,
               c.nome AS campo_nome, c.foto_url AS campo_foto, c.tipo_piso AS campo_piso,
               c.dono_id AS campo_dono_id,
@@ -144,6 +146,11 @@ async function obterJogo(req, res) {
       return res.status(404).json({ sucesso: false, mensagem: 'Jogo não encontrado.' });
 
     const jogo = resultado.recordset[0];
+
+    // Notas do organizador: só o criador as vê
+    if (utilizadorId !== jogo.criador_id) {
+      jogo.notas_organizador = null;
+    }
 
     // Jogo privado: ocultar local se não for inscrito/criador, e ocultar código a quem não é criador
     if (jogo.visibilidade === 'privado') {
@@ -237,7 +244,8 @@ async function criarJogo(req, res) {
             tipoLocal='publico', campoId=null,
             modeloPagamento=null, precoTotalCents=null,
             formatoLotacao=null,
-            recorrencia=null, recorrenciaOcorrencias=0 } = req.body;
+            recorrencia=null, recorrenciaOcorrencias=0,
+            modoCheckin='manual' } = req.body;
 
     if (!titulo || !dataJogo)
       return res.status(400).json({ sucesso: false, mensagem: 'Título e data são obrigatórios.' });
@@ -316,13 +324,13 @@ async function criarJogo(req, res) {
                           visibilidade, nivel, codigo_acesso, modo_jogo, criador_id,
                           tipo_local, campo_id, modelo_pagamento, preco_total_cents,
                           preco_por_jogador_cents, reserva_estado, deadline_pagamento,
-                          formato_lotacao, latitude, longitude,
+                          formato_lotacao, latitude, longitude, modo_checkin,
                           created_at, updated_at)
        OUTPUT INSERTED.id
        VALUES (@titulo, @descricao, @dataJogo, @local, @regiao, @tipoJogo, @maxJogadores, 'aberto',
                @visibilidade, @nivel, @codigoAcesso, @modoJogo, @criadorId,
                @tipoLocal, @campoId, @modeloPag, @precoTot, @precoJog, @resEstado, @deadline,
-               @formatoLot, @lat, @lng,
+               @formatoLot, @lat, @lng, @modoCheckin,
                GETUTCDATE(), GETUTCDATE())`,
       { titulo, descricao: descricao||null, dataJogo: new Date(dataJogo), local: localFinal,
         regiao: regiaoFinal, tipoJogo, maxJogadores: parseInt(maxJogadores),
@@ -334,7 +342,8 @@ async function criarJogo(req, res) {
         lat: latFinal ? parseFloat(latFinal) : null,
         lng: lngFinal ? parseFloat(lngFinal) : null,
         resEstado: reservaEstado, deadline,
-        formatoLot: tipoLocal === 'parceiro' ? parseInt(formatoLotacao) : null }
+        formatoLot: tipoLocal === 'parceiro' ? parseInt(formatoLotacao) : null,
+        modoCheckin: modoCheckin || 'manual' }
     );
 
     const jogoId = resultado.recordset[0].id;
@@ -411,6 +420,29 @@ async function criarJogo(req, res) {
       geocodificarJogo(jogoId, localFinal, regiaoFinal).catch(e =>
         console.warn('[Geocoding] Falhou para jogo', jogoId, ':', e.message)
       );
+    }
+
+    // Notificar utilizadores que têm a região guardada como preferência
+    if (regiaoFinal) {
+      try {
+        const interessados = await query(
+          `SELECT id FROM utilizadores
+           WHERE regiao_preferida = @regiao AND id <> @uid AND ativo = 1`,
+          { regiao: regiaoFinal, uid: req.utilizador.id }
+        );
+        for (const u of interessados.recordset) {
+          await criarNotificacao({
+            utilizadorId: u.id,
+            tipo: 'novo_jogo',
+            titulo: '⚽ Novo jogo na tua região!',
+            mensagem: `"${titulo}" em ${regiaoFinal} — ${new Date(dataJogo).toLocaleDateString('pt-PT')}.`,
+            jogoId: jogoId,
+            acaoUrl: `/jogos/${jogoId}`,
+          });
+        }
+      } catch (e) {
+        console.warn('[Jogo] Notif região falhou:', e.message);
+      }
     }
 
     res.status(201).json({ sucesso: true, mensagem: 'Jogo criado!', jogoId, codigoAcesso, recorrenciaCriados });
@@ -624,7 +656,7 @@ async function editarJogo(req, res) {
     if (jogo.criador_id !== utilizadorId && !isAdmin)
       return res.status(403).json({ sucesso: false, mensagem: 'Sem permissão para editar este jogo.' });
 
-    const { titulo, descricao, dataJogo, local, regiao, tipoJogo, maxJogadores, nivel } = req.body;
+    const { titulo, descricao, dataJogo, local, regiao, tipoJogo, maxJogadores, nivel, notasOrganizador, modoCheckin } = req.body;
 
     if (!titulo || !titulo.trim())
       return res.status(400).json({ sucesso: false, mensagem: 'O título é obrigatório.' });
@@ -637,6 +669,8 @@ async function editarJogo(req, res) {
       `UPDATE jogos
        SET titulo=@titulo, descricao=@descricao, data_jogo=@dataJogo, local=@local,
            regiao=@regiao, tipo_jogo=@tipoJogo, max_jogadores=@maxJogadores, nivel=@nivel,
+           notas_organizador=@notasOrganizador,
+           modo_checkin = COALESCE(@modoCheckin, modo_checkin),
            latitude  = CASE WHEN @lat IS NOT NULL THEN @lat ELSE latitude END,
            longitude = CASE WHEN @lng IS NOT NULL THEN @lng ELSE longitude END,
            updated_at=GETUTCDATE()
@@ -651,6 +685,8 @@ async function editarJogo(req, res) {
         tipoJogo: tipoJogo || '5x5',
         maxJogadores: parseInt(maxJogadores) || 10,
         nivel: nivel || 'Descontraído',
+        notasOrganizador: notasOrganizador !== undefined ? (notasOrganizador || null) : null,
+        modoCheckin: modoCheckin || null,
         lat: latManual ?? null,
         lng: lngManual ?? null,
       }
@@ -695,4 +731,86 @@ async function eliminarJogo(req, res) {
   }
 }
 
-module.exports = { listarJogos, obterJogo, criarJogo, editarJogo, inscreverJogo, cancelarInscricao, eliminarJogo, checkin, geocodificarJogo };
+// POST /api/jogos/:id/cancelar
+async function cancelarJogo(req, res) {
+  try {
+    const jogoId = parseInt(req.params.id);
+    const uid = req.utilizador.id;
+    const { motivo } = req.body;
+
+    const jogoR = await query(
+      `SELECT id, criador_id, estado, titulo FROM jogos WHERE id=@id`, { id: jogoId }
+    );
+    if (!jogoR.recordset.length)
+      return res.status(404).json({ sucesso: false, mensagem: 'Jogo não encontrado.' });
+
+    const jogo = jogoR.recordset[0];
+    if (jogo.criador_id !== uid)
+      return res.status(403).json({ sucesso: false, mensagem: 'Só o criador pode cancelar o jogo.' });
+    if (['cancelado', 'concluido'].includes(jogo.estado))
+      return res.status(400).json({ sucesso: false, mensagem: 'Jogo já cancelado ou concluído.' });
+
+    const motivoLimpo = motivo ? String(motivo).substring(0, 200) : null;
+
+    await query(
+      `UPDATE jogos SET estado='cancelado', updated_at=GETUTCDATE() WHERE id=@id`, { id: jogoId }
+    );
+
+    // Notificar inscritos
+    const inscritos = await query(
+      `SELECT utilizador_id FROM inscricoes WHERE jogo_id=@id AND estado='confirmado'`, { id: jogoId }
+    );
+    for (const i of inscritos.recordset) {
+      try {
+        await criarNotificacao({
+          utilizadorId: i.utilizador_id,
+          tipo: 'cancelamento',
+          titulo: 'Jogo cancelado',
+          mensagem: `O jogo "${jogo.titulo}" foi cancelado pelo organizador.${motivoLimpo ? ` Motivo: ${motivoLimpo}` : ''}`,
+          jogoId,
+          acaoUrl: `/jogos/${jogoId}`,
+        });
+      } catch {}
+    }
+
+    // Socket emit
+    try {
+      const io = req.app.get('io');
+      if (io) io.to(`jogo_${jogoId}`).emit('jogo_cancelado', { motivo: motivoLimpo });
+    } catch {}
+
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error('[Jogos] Cancelar:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+// POST /api/jogos/:id/checkin-qr
+async function checkinQR(req, res) {
+  try {
+    const jogoId = parseInt(req.params.id);
+    const uid = req.utilizador.id;
+    const jR = await query(`SELECT data_jogo, modo_checkin FROM jogos WHERE id=@id AND estado <> 'cancelado'`, { id: jogoId });
+    if (!jR.recordset.length) return res.status(404).json({ sucesso: false, mensagem: 'Jogo não encontrado.' });
+
+    const ins = await query(
+      `SELECT id FROM inscricoes WHERE jogo_id=@jid AND utilizador_id=@uid AND estado='confirmado'`,
+      { jid: jogoId, uid }
+    );
+    if (!ins.recordset.length)
+      return res.status(403).json({ sucesso: false, mensagem: 'Só participantes confirmados podem fazer check-in.' });
+
+    await query(
+      `UPDATE inscricoes SET checkin_at = GETUTCDATE()
+        WHERE jogo_id=@jid AND utilizador_id=@uid AND estado='confirmado' AND checkin_at IS NULL`,
+      { jid: jogoId, uid }
+    );
+    res.json({ sucesso: true, mensagem: 'Check-in QR feito!' });
+  } catch (err) {
+    console.error('[Jogos] checkinQR:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro.' });
+  }
+}
+
+module.exports = { listarJogos, obterJogo, criarJogo, editarJogo, inscreverJogo, cancelarInscricao, eliminarJogo, checkin, geocodificarJogo, cancelarJogo, checkinQR };

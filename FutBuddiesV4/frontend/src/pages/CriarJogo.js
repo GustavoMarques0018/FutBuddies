@@ -46,6 +46,7 @@ export default function CriarJogo() {
     modeloPagamento: '', precoTotalCents: 0,
     recorrencia: null, recorrenciaOcorrencias: 0,
     latitude: null, longitude: null,
+    modoCheckin: 'manual',
   });
   const [mostrarMapaPicker, setMostrarMapaPicker] = useState(false);
   const [campos, setCampos] = useState([]);
@@ -548,6 +549,26 @@ export default function CriarJogo() {
                 )}
               </div>
             )}
+
+            {/* Modo de Check-in */}
+            <div className="form-field">
+              <label>Modo de Check-in</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                {[
+                  { v: 'manual', icon: '📋', titulo: 'Manual', desc: 'O criador confirma a presença de cada jogador.' },
+                  { v: 'qrcode', icon: '📱', titulo: 'QR Code', desc: 'Cada jogador escaneia o QR para fazer check-in automaticamente.' },
+                ].map(opt => (
+                  <button key={opt.v} type="button"
+                    onClick={() => setForm(f => ({ ...f, modoCheckin: opt.v }))}
+                    className={`tipo-jogo-btn ${form.modoCheckin === opt.v ? 'active' : ''}`}
+                    style={{ flexDirection: 'column', gap: '0.25rem', padding: '1rem', textAlign: 'left' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{opt.icon}</span>
+                    <span className="tipo-jogo-value">{opt.titulo}</span>
+                    <span className="tipo-jogo-label" style={{ whiteSpace: 'normal', lineHeight: 1.3 }}>{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Preview */}
             <div className="criar-jogo-preview card">

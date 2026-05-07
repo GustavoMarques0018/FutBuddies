@@ -524,6 +524,96 @@ async function iniciar() {
       console.warn('⚠️  Chat migration:', e.message);
     }
 
+    // ── Feature migrations (Features 1-12) ───────────────
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','notas_organizador') IS NULL
+          ALTER TABLE dbo.jogos ADD notas_organizador NVARCHAR(1000) NULL;
+      `);
+      console.log('✅ jogos.notas_organizador garantida');
+    } catch(e) { console.warn('⚠️  notas_organizador migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','auto_cancelado') IS NULL
+          ALTER TABLE dbo.jogos ADD auto_cancelado BIT NULL;
+      `);
+      console.log('✅ jogos.auto_cancelado garantida');
+    } catch(e) { console.warn('⚠️  auto_cancelado migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','lembrete_2h_enviado') IS NULL
+          ALTER TABLE dbo.jogos ADD lembrete_2h_enviado BIT NULL;
+      `);
+      console.log('✅ jogos.lembrete_2h_enviado garantida');
+    } catch(e) { console.warn('⚠️  lembrete_2h_enviado migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','modo_checkin') IS NULL
+          ALTER TABLE dbo.jogos ADD modo_checkin NVARCHAR(20) NULL;
+      `);
+      console.log('✅ jogos.modo_checkin garantida');
+    } catch(e) { console.warn('⚠️  modo_checkin migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.jogos','votacao_tempo_aberta') IS NULL
+          ALTER TABLE dbo.jogos ADD votacao_tempo_aberta BIT NULL;
+      `);
+      console.log('✅ jogos.votacao_tempo_aberta garantida');
+    } catch(e) { console.warn('⚠️  votacao_tempo_aberta migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.utilizadores','regiao_preferida') IS NULL
+          ALTER TABLE dbo.utilizadores ADD regiao_preferida NVARCHAR(100) NULL;
+      `);
+      console.log('✅ utilizadores.regiao_preferida garantida');
+    } catch(e) { console.warn('⚠️  regiao_preferida migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF COL_LENGTH('dbo.utilizadores','disponivel_jogar') IS NULL
+          ALTER TABLE dbo.utilizadores ADD disponivel_jogar BIT NULL DEFAULT 0;
+        IF COL_LENGTH('dbo.utilizadores','disponivel_regiao') IS NULL
+          ALTER TABLE dbo.utilizadores ADD disponivel_regiao NVARCHAR(100) NULL;
+        IF COL_LENGTH('dbo.utilizadores','disponivel_ate') IS NULL
+          ALTER TABLE dbo.utilizadores ADD disponivel_ate DATETIME2 NULL;
+      `);
+      console.log('✅ utilizadores.disponivel_* garantidas');
+    } catch(e) { console.warn('⚠️  disponivel_* migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='fotos_jogo')
+          CREATE TABLE fotos_jogo (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            jogo_id INT NOT NULL,
+            utilizador_id INT NOT NULL,
+            url NVARCHAR(500) NOT NULL,
+            created_at DATETIME2 DEFAULT GETUTCDATE()
+          );
+      `);
+      console.log('✅ Tabela fotos_jogo garantida');
+    } catch(e) { console.warn('⚠️  fotos_jogo migration:', e.message); }
+
+    try {
+      await pool.request().query(`
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='votacoes_tempo')
+          CREATE TABLE votacoes_tempo (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            jogo_id INT NOT NULL,
+            utilizador_id INT NOT NULL,
+            voto NVARCHAR(10) NOT NULL,
+            created_at DATETIME2 DEFAULT GETUTCDATE(),
+            CONSTRAINT UQ_votacao_tempo UNIQUE (jogo_id, utilizador_id)
+          );
+      `);
+      console.log('✅ Tabela votacoes_tempo garantida');
+    } catch(e) { console.warn('⚠️  votacoes_tempo migration:', e.message); }
+
     server.listen(PORT, '0.0.0.0', () => {
       console.log('');
       console.log('⚽ ==========================================');
