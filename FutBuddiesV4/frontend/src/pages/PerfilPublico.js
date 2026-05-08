@@ -12,6 +12,9 @@ import Emblema from '../components/Emblema';
 import Conquistas from '../components/Conquistas';
 import FormaChart from '../components/FormaChart';
 import H2HModal from '../components/H2HModal';
+import HeatmapPresencas from '../components/HeatmapPresencas';
+import TrofeusEpoca from '../components/TrofeusEpoca';
+import ComparacaoMedia from '../components/ComparacaoMedia';
 import './PerfilPublico.css';
 
 export default function PerfilPublico() {
@@ -243,10 +246,28 @@ export default function PerfilPublico() {
           <Conquistas utilizadorId={id} />
         </div>
 
+        {/* Comparação com a média da plataforma */}
+        <div className="card" style={{ padding: '1.5rem', marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 1rem', fontFamily: 'var(--font-display)' }}>📊 vs Média da Plataforma</h3>
+          <ComparacaoMedia utilizadorId={id} />
+        </div>
+
+        {/* Heatmap de presenças */}
+        <div className="card" style={{ padding: '1.5rem', marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 0.75rem', fontFamily: 'var(--font-display)' }}>📅 Presenças</h3>
+          <HeatmapPresencas utilizadorId={id} />
+        </div>
+
         {/* Análise de Forma (12 meses) */}
         <div className="card" style={{ padding: '1.5rem', marginTop: '1.25rem' }}>
           <h3 style={{ margin: '0 0 1rem', fontFamily: 'var(--font-display)' }}>📈 Forma (12 meses)</h3>
           <FormaChart utilizadorId={id} />
+        </div>
+
+        {/* Troféus de Época */}
+        <div className="card" style={{ padding: '1.5rem', marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 1rem', fontFamily: 'var(--font-display)' }}>🏆 Troféus de Época</h3>
+          <TrofeusEpoca utilizadorId={id} />
         </div>
       </div>
 

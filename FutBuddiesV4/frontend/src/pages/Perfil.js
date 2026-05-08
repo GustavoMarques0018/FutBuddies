@@ -33,7 +33,7 @@ export default function Perfil() {
   };
   const [perfil, setPerfil] = useState(null);
   const [equipa, setEquipa] = useState(null);
-  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true, receberEmails: true, regiaoPreferida: '', disponivelJogar: false, disponivelRegiao: '', disponivelAte: '' });
+  const [form, setForm] = useState({ posicao:'', cidade:'', bio:'', nickname:'', pePreferido:'', regiao:'', fotoUrl:'', perfilPublico: true, receberEmails: true, regiaoPreferida: '', disponivelJogar: false, disponivelRegiao: '', disponivelAte: '', lembreteHoras: '' });
   const [passForm, setPassForm] = useState({ passwordAtual:'', novaPassword:'', confirmar:'' });
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -56,6 +56,7 @@ export default function Perfil() {
         disponivelJogar: !!u.disponivel_jogar,
         disponivelRegiao: u.disponivel_regiao || '',
         disponivelAte: u.disponivel_ate ? new Date(u.disponivel_ate).toISOString().slice(0,10) : '',
+        lembreteHoras: u.lembrete_jogo_horas ? String(u.lembrete_jogo_horas) : '',
       });
     }).catch(() => addToast('Erro ao carregar perfil.', 'error'))
       .finally(() => setLoading(false));
@@ -462,6 +463,25 @@ export default function Perfil() {
             {/* Notificações Push */}
             <div className="card" style={{ padding: '1.25rem' }}>
               <PushToggle />
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.4rem' }}>
+                  ⏰ Lembrete antes do jogo
+                </label>
+                <select
+                  className="form-input"
+                  value={form.lembreteHoras}
+                  onChange={e => setForm(f => ({ ...f, lembreteHoras: e.target.value }))}
+                  style={{ maxWidth: 220 }}
+                >
+                  <option value="">Sem lembrete</option>
+                  <option value="1">1 hora antes</option>
+                  <option value="2">2 horas antes</option>
+                  <option value="24">24 horas antes</option>
+                </select>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+                  Receberás uma notificação push antes dos jogos em que estás inscrito.
+                </p>
+              </div>
             </div>
 
             {/* Email opt-in */}

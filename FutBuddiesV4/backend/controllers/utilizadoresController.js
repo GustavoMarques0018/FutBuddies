@@ -70,6 +70,7 @@ async function getPerfil(req, res) {
                   regiao_preferida,
                   COALESCE(disponivel_jogar, 0) AS disponivel_jogar,
                   disponivel_regiao, disponivel_ate,
+                  lembrete_jogo_horas,
                   created_at, ultimo_login`;
     const resultado = await query(
       `SELECT ${cols} FROM utilizadores WHERE id = @id`,
@@ -92,7 +93,7 @@ async function getPerfil(req, res) {
 async function updatePerfil(req, res) {
   try {
     const { posicao, cidade, bio, nickname, pePreferido, regiao, fotoUrl, perfilPublico, receberEmails,
-            regiaoPreferida, disponivelJogar, disponivelRegiao, disponivelAte } = req.body;
+            regiaoPreferida, disponivelJogar, disponivelRegiao, disponivelAte, lembreteHoras } = req.body;
     const temPP = await temColunaPerfilPublico();
     const perfilPubBit = (perfilPublico === undefined || perfilPublico === null) ? null : (perfilPublico ? 1 : 0);
     const receberBit  = (receberEmails  === undefined || receberEmails  === null) ? null : (receberEmails  ? 1 : 0);
@@ -117,12 +118,16 @@ async function updatePerfil(req, res) {
       ? `, regiao_preferida = @regiaoPreferida`
       : '';
 
+    const lembreteVal = [1,2,24].includes(parseInt(lembreteHoras)) ? parseInt(lembreteHoras) : null;
+    const setLembrete = lembreteVal !== null ? `, lembrete_jogo_horas = @lembreteHoras` : '';
+    if (lembreteVal !== null) params.lembreteHoras = lembreteVal;
+
     await query(
       `UPDATE utilizadores
        SET posicao=@posicao, cidade=@cidade, bio=@bio, nickname=@nickname,
            pe_preferido=@pePreferido, regiao=@regiao, foto_url=@fotoUrl,
            receber_emails = COALESCE(@receber, receber_emails)
-           ${setPP}${setRegiaoPreferida}${setDisponivel},
+           ${setPP}${setRegiaoPreferida}${setDisponivel}${setLembrete},
            updated_at=GETUTCDATE()
        WHERE id=@id`,
       params
@@ -200,7 +205,10 @@ async function getPerfilPublico(req, res) {
     const ppCol = temPP ? 'perfil_publico,' : '';
     const resultado = await query(
       `SELECT id, nome, nickname, posicao, pe_preferido, regiao, cidade, bio, foto_url,
-              total_jogos, total_golos, total_assistencias, ${ppCol} created_at
+              total_jogos, total_golos, total_assistencias, ${ppCol}
+              COALESCE(streak_atual,0) AS streak_atual,
+              COALESCE(streak_max,0) AS streak_max,
+              created_at
        FROM utilizadores WHERE id=@id AND ativo=1`, { id: alvoId }
     );
     if (resultado.recordset.length === 0)
