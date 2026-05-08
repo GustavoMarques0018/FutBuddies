@@ -11,7 +11,7 @@ import api from '../../utils/api';
 import {
   IconUser, IconUsers, IconTrophy, IconBall, IconShield, IconLogout,
   IconSun, IconMoon, IconPlus, IconInfo, IconSearch, IconCrown,
-  IconStadium, IconChat,
+  IconStadium, IconChat, IconChart,
 } from '../Icons';
 import NotificacoesBell from '../NotificacoesBell';
 import './Navbar.css';
@@ -195,7 +195,7 @@ export default function Navbar() {
                 onClick={() => toggleDropdown('ligas')}
                 aria-expanded={dropdownAberto === 'ligas'}
               >
-                <IconTrophy size="0.95rem" /> Ligas <span className="navbar-chevron-mini">▾</span>
+                <IconChart size="0.95rem" /> Ligas <span className="navbar-chevron-mini">▾</span>
               </button>
               {dropdownAberto === 'ligas' && (
                 <div className="navbar-menu">
@@ -214,9 +214,6 @@ export default function Navbar() {
             <IconStadium size="0.95rem" /> Campos
           </Link>
 
-          <Link to="/sobre" className={`navbar-link ${isActive('/sobre') ? 'active' : ''}`}>
-            <IconInfo size="0.95rem" /> Sobre
-          </Link>
           <Link to="/suporte" className={`navbar-link ${isActive('/suporte') ? 'active' : ''}`}>
             <IconChat size="0.95rem" /> Suporte
           </Link>
@@ -271,6 +268,8 @@ export default function Navbar() {
                     </>
                   )}
                   <div className="navbar-dropdown-divider" />
+                  <Link to="/sobre" className="navbar-dropdown-item"><IconInfo size="0.95rem" /> Sobre</Link>
+                  <div className="navbar-dropdown-divider" />
                   <button className="navbar-dropdown-item danger" onClick={handleLogout}><IconLogout size="0.95rem" color="var(--danger)" /> Sair</button>
                 </div>
               )}
@@ -323,7 +322,6 @@ export default function Navbar() {
           )}
 
           <Link to="/campos" className="navbar-mobile-link">Campos</Link>
-          <Link to="/sobre" className="navbar-mobile-link">Sobre</Link>
           <Link to="/suporte" className="navbar-mobile-link">Suporte</Link>
 
           {isAuthenticated && (
@@ -333,6 +331,7 @@ export default function Navbar() {
               <Link to="/amigos" className="navbar-mobile-link sub">Amigos</Link>
               <Link to="/dono-campo" className="navbar-mobile-link sub">Dono de Campo</Link>
               {utilizador?.role === 'admin' && <Link to="/admin" className="navbar-mobile-link sub">Admin</Link>}
+              <Link to="/sobre" className="navbar-mobile-link sub">Sobre</Link>
               <button className="navbar-mobile-link danger" onClick={handleLogout}>Sair</button>
             </>
           )}
@@ -341,6 +340,7 @@ export default function Navbar() {
               <div className="navbar-mobile-section">Conta</div>
               <Link to="/login" className="navbar-mobile-link sub">Entrar</Link>
               <Link to="/registar" className="navbar-mobile-link sub">Criar Conta</Link>
+              <Link to="/sobre" className="navbar-mobile-link sub">Sobre</Link>
             </>
           )}
         </div>
