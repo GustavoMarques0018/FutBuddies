@@ -10,17 +10,29 @@ function gerarCodigo() {
 // POST /api/ligas
 async function criarLiga(req, res) {
   try {
-    const { nome, tipo = 'mensal' } = req.body;
+    const { nome, tipo = 'mensal', regras = null, premio = null } = req.body;
     if (!nome?.trim()) return res.status(400).json({ sucesso: false, mensagem: 'Nome obrigatório.' });
     if (!['semanal','mensal','epoca'].includes(tipo))
       return res.status(400).json({ sucesso: false, mensagem: 'Tipo inválido.' });
 
+    // Verificar que o utilizador tem equipa
+    const equipaRes = await query(
+      `SELECT e.id, e.nome FROM equipas e
+         JOIN equipa_membros em ON em.equipa_id=e.id
+         WHERE em.utilizador_id=@uid`,
+      { uid: req.utilizador.id }
+    );
+    if (!equipaRes.recordset.length)
+      return res.status(400).json({ sucesso: false, mensagem: 'Precisas de pertencer a uma equipa para criar uma liga.' });
+
+    const equipaId = equipaRes.recordset[0].id;
     const codigo = gerarCodigo();
     const r = await query(
-      `INSERT INTO ligas (nome, criador_id, codigo, tipo, estado, created_at)
+      `INSERT INTO ligas (nome, criador_id, codigo, tipo, estado, equipa_id, regras, premio, created_at)
        OUTPUT INSERTED.id
-       VALUES (@nome, @uid, @codigo, @tipo, 'ativa', GETUTCDATE())`,
-      { nome: nome.trim(), uid: req.utilizador.id, codigo, tipo }
+       VALUES (@nome, @uid, @codigo, @tipo, 'ativa', @equipaId, @regras, @premio, GETUTCDATE())`,
+      { nome: nome.trim(), uid: req.utilizador.id, codigo, tipo,
+        equipaId, regras: regras?.trim() || null, premio: premio?.trim() || null }
     );
     const ligaId = r.recordset[0].id;
 
@@ -77,11 +89,13 @@ async function listarMinhasLigas(req, res) {
   try {
     const r = await query(
       `SELECT l.id, l.nome, l.codigo, l.tipo, l.estado, l.created_at,
-              l.criador_id,
+              l.criador_id, l.regras, l.premio, l.equipa_id,
+              eq.nome AS equipa_nome,
               (SELECT COUNT(*) FROM liga_membros WHERE liga_id=l.id) AS total_membros,
               (SELECT COUNT(*) FROM liga_jogos WHERE liga_id=l.id) AS total_jogos
          FROM ligas l
          JOIN liga_membros lm ON lm.liga_id=l.id
+         LEFT JOIN equipas eq ON eq.id=l.equipa_id
          WHERE lm.utilizador_id=@uid
          ORDER BY l.created_at DESC`,
       { uid: req.utilizador.id }
@@ -107,8 +121,10 @@ async function obterLiga(req, res) {
       return res.status(403).json({ sucesso: false, mensagem: 'Não és membro desta liga.' });
 
     const liga = await query(
-      `SELECT l.*, u.nome AS criador_nome FROM ligas l
+      `SELECT l.*, u.nome AS criador_nome, eq.nome AS equipa_nome
+         FROM ligas l
          JOIN utilizadores u ON u.id=l.criador_id
+         LEFT JOIN equipas eq ON eq.id=l.equipa_id
          WHERE l.id=@lid`, { lid: ligaId }
     );
     if (!liga.recordset.length)

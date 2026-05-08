@@ -2,7 +2,7 @@
 //  FutBuddies - Liga entre Amigos
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import Avatar from '../components/Avatar';
 import { useToast } from '../components/Toast';
@@ -15,14 +15,27 @@ const TIPOS = { semanal: 'Semanal', mensal: 'Mensal', epoca: 'Época' };
 function ModalCriar({ onFechar, onCriada }) {
   const [nome, setNome]     = useState('');
   const [tipo, setTipo]     = useState('mensal');
+  const [regras, setRegras] = useState('');
+  const [premio, setPremio] = useState('');
+  const [equipa, setEquipa] = useState(null);    // { id, nome }
+  const [equipaLoad, setEquipaLoad] = useState(true);
   const [loading, setLoad]  = useState(false);
   const { addToast }        = useToast();
 
+  // Buscar equipa do utilizador ao abrir
+  useEffect(() => {
+    api.get('/utilizadores/me/equipa')
+      .then(r => setEquipa(r.data?.equipa || null))
+      .catch(() => setEquipa(null))
+      .finally(() => setEquipaLoad(false));
+  }, []);
+
   const criar = async () => {
     if (!nome.trim()) return addToast('Nome obrigatório.', 'error');
+    if (!equipa) return addToast('Precisas de pertencer a uma equipa para criar uma liga.', 'error');
     setLoad(true);
     try {
-      const r = await api.post('/ligas', { nome, tipo });
+      const r = await api.post('/ligas', { nome, tipo, regras: regras || null, premio: premio || null });
       addToast(`Liga criada! Código: ${r.data.codigo}`, 'success', 6000);
       onCriada();
       onFechar();
@@ -34,10 +47,30 @@ function ModalCriar({ onFechar, onCriada }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}
       onClick={e => e.target===e.currentTarget && onFechar()}>
-      <div className="card" style={{ maxWidth:400, width:'100%', padding:'1.5rem' }}>
+      <div className="card" style={{ maxWidth:440, width:'100%', padding:'1.5rem', maxHeight:'90vh', overflowY:'auto' }}>
         <h3 style={{ margin:'0 0 1.25rem', fontFamily:'var(--font-display)' }}>⚽ Nova Liga</h3>
-        <label className="form-label">Nome da Liga</label>
-        <input className="form-input" placeholder="Ex: Liga dos Amigos do João" value={nome} onChange={e=>setNome(e.target.value)} maxLength={100} />
+
+        {/* Equipa (obrigatória) */}
+        <label className="form-label">Equipa</label>
+        {equipaLoad ? (
+          <p style={{ fontSize:'0.85rem', color:'var(--text-muted)' }}>A carregar…</p>
+        ) : equipa ? (
+          <div style={{ padding:'0.5rem 0.75rem', background:'var(--bg-elev-2)', borderRadius:'var(--radius-sm)',
+            border:'1px solid var(--border)', fontSize:'0.875rem', marginBottom:'0.25rem', display:'flex', alignItems:'center', gap:'0.4rem' }}>
+            🛡️ <strong>{equipa.nome}</strong>
+            <span style={{ color:'var(--text-muted)', fontSize:'0.78rem', marginLeft:'auto' }}>equipa associada à liga</span>
+          </div>
+        ) : (
+          <div style={{ padding:'0.6rem 0.75rem', background:'rgba(239,68,68,0.08)', border:'1px solid var(--danger,#ef4444)',
+            borderRadius:'var(--radius-sm)', fontSize:'0.82rem', color:'var(--danger,#ef4444)' }}>
+            ⚠️ Não pertences a nenhuma equipa. Cria ou junta-te a uma equipa primeiro.
+          </div>
+        )}
+
+        <label className="form-label" style={{ marginTop:'1rem' }}>Nome da Liga</label>
+        <input className="form-input" placeholder="Ex: Liga dos Amigos do João" value={nome}
+          onChange={e=>setNome(e.target.value)} maxLength={100} />
+
         <label className="form-label" style={{ marginTop:'1rem' }}>Tipo</label>
         <div style={{ display:'flex', gap:'0.5rem' }}>
           {Object.entries(TIPOS).map(([k,v]) => (
@@ -46,9 +79,19 @@ function ModalCriar({ onFechar, onCriada }) {
               onClick={() => setTipo(k)}>{v}</button>
           ))}
         </div>
+
+        <label className="form-label" style={{ marginTop:'1rem' }}>Regras <span style={{ color:'var(--text-muted)', fontWeight:400 }}>(opcional)</span></label>
+        <textarea className="form-input" placeholder="Ex: 3 pontos por vitória, empate vale 1. Descida para os últimos 2…"
+          value={regras} onChange={e=>setRegras(e.target.value)} maxLength={1000}
+          style={{ minHeight:80, resize:'vertical' }} />
+
+        <label className="form-label" style={{ marginTop:'1rem' }}>🏅 Prémio do Campeão <span style={{ color:'var(--text-muted)', fontWeight:400 }}>(opcional)</span></label>
+        <input className="form-input" placeholder="Ex: Jantar pago pelos outros, troféu personalizado…"
+          value={premio} onChange={e=>setPremio(e.target.value)} maxLength={500} />
+
         <div style={{ display:'flex', gap:'0.5rem', justifyContent:'flex-end', marginTop:'1.25rem' }}>
           <button className="btn btn-ghost btn-sm" onClick={onFechar}>Cancelar</button>
-          <button className="btn btn-primary btn-sm" onClick={criar} disabled={loading}>
+          <button className="btn btn-primary btn-sm" onClick={criar} disabled={loading || !equipa}>
             {loading ? '⏳' : 'Criar Liga'}
           </button>
         </div>
@@ -150,7 +193,9 @@ function Detalheliga({ ligaId, meuId, onVoltar }) {
         <div>
           <h2 style={{ margin:0, fontFamily:'var(--font-display)' }}>⚽ {liga.nome}</h2>
           <p style={{ margin:'0.25rem 0 0', fontSize:'0.8rem', color:'var(--text-muted)' }}>
-            {TIPOS[liga.tipo]} · Código: <strong style={{ letterSpacing:'2px' }}>{liga.codigo}</strong>
+            {TIPOS[liga.tipo]}
+            {liga.equipa_nome && <> · 🛡️ {liga.equipa_nome}</>}
+            {' · '}Código: <strong style={{ letterSpacing:'2px' }}>{liga.codigo}</strong>
             {liga.estado === 'encerrada' && <span className="badge badge-gray" style={{ marginLeft:'0.5rem', fontSize:'0.7rem' }}>Encerrada</span>}
           </p>
         </div>
@@ -160,6 +205,28 @@ function Detalheliga({ ligaId, meuId, onVoltar }) {
           </button>
         )}
       </div>
+
+      {/* Regras e Prémio */}
+      {(liga.regras || liga.premio) && (
+        <div className="card" style={{ marginBottom:'1.25rem', padding:'1.25rem', display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+          {liga.regras && (
+            <div>
+              <p style={{ margin:'0 0 0.3rem', fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color:'var(--text-muted)' }}>
+                📋 Regras
+              </p>
+              <p style={{ margin:0, fontSize:'0.875rem', whiteSpace:'pre-wrap', lineHeight:1.5 }}>{liga.regras}</p>
+            </div>
+          )}
+          {liga.premio && (
+            <div>
+              <p style={{ margin:'0 0 0.3rem', fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color:'var(--text-muted)' }}>
+                🏅 Prémio do Campeão
+              </p>
+              <p style={{ margin:0, fontSize:'0.875rem', color:'var(--warning)', fontWeight:600 }}>{liga.premio}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tabela classificativa */}
       <div className="card" style={{ marginBottom:'1.25rem', padding:'1.25rem' }}>
@@ -246,6 +313,17 @@ export default function Ligas() {
   const [modalEntrar, setModalEntrar] = useState(false);
   const [ligaSelecionada, setLigaSelecionada] = useState(null);
   const { utilizador } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Abrir modal de criar quando chega via ?criar=1 (link da navbar)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('criar') === '1') {
+      setModalCriar(true);
+      navigate('/ligas', { replace: true });
+    }
+  }, [location.search]);
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -290,14 +368,21 @@ export default function Ligas() {
           <div style={{ display:'flex', flexDirection:'column', gap:'0.625rem' }}>
             {ligas.map(l => (
               <div key={l.id} className={`liga-card ${l.estado}`} onClick={() => setLigaSelecionada(l.id)}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                  <div style={{ flex:1, minWidth:0 }}>
                     <p style={{ margin:0, fontWeight:700, fontSize:'1rem' }}>⚽ {l.nome}</p>
                     <p style={{ margin:'0.2rem 0 0', fontSize:'0.78rem', color:'var(--text-muted)' }}>
-                      {TIPOS[l.tipo]} · {l.total_membros} membro{l.total_membros!==1?'s':''} · {l.total_jogos} jogo{l.total_jogos!==1?'s':''}
+                      {TIPOS[l.tipo]}
+                      {l.equipa_nome && <> · 🛡️ {l.equipa_nome}</>}
+                      {' · '}{l.total_membros} membro{l.total_membros!==1?'s':''} · {l.total_jogos} jogo{l.total_jogos!==1?'s':''}
                     </p>
+                    {l.premio && (
+                      <p style={{ margin:'0.3rem 0 0', fontSize:'0.75rem', color:'var(--warning)', fontWeight:600 }}>
+                        🏅 {l.premio}
+                      </p>
+                    )}
                   </div>
-                  <div style={{ display:'flex', gap:'0.4rem', alignItems:'center' }}>
+                  <div style={{ display:'flex', gap:'0.4rem', alignItems:'center', flexShrink:0, marginLeft:'0.5rem' }}>
                     {l.criador_id === utilizador?.id && <span className="badge badge-green" style={{ fontSize:'0.7rem' }}>👑 Criador</span>}
                     <span className={`badge ${l.estado==='ativa'?'badge-green':'badge-gray'}`} style={{ fontSize:'0.7rem' }}>
                       {l.estado==='ativa'?'Ativa':'Encerrada'}
