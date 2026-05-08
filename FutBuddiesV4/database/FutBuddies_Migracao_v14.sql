@@ -38,19 +38,32 @@ IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name='ligas')
 BEGIN
   CREATE TABLE ligas (
     id          INT IDENTITY(1,1) PRIMARY KEY,
-    nome        NVARCHAR(100) NOT NULL,
-    criador_id  INT           NOT NULL,
-    codigo      NVARCHAR(10)  NOT NULL UNIQUE,
-    tipo        NVARCHAR(20)  NOT NULL DEFAULT 'mensal'
+    nome        NVARCHAR(100)  NOT NULL,
+    criador_id  INT            NOT NULL,
+    codigo      NVARCHAR(10)   NOT NULL UNIQUE,
+    tipo        NVARCHAR(20)   NOT NULL DEFAULT 'mensal'
                 CHECK (tipo IN ('semanal','mensal','epoca')),
-    estado      NVARCHAR(20)  NOT NULL DEFAULT 'ativa'
+    estado      NVARCHAR(20)   NOT NULL DEFAULT 'ativa'
                 CHECK (estado IN ('ativa','encerrada')),
-    created_at  DATETIME2     NOT NULL DEFAULT GETUTCDATE(),
-    CONSTRAINT FK_liga_criador FOREIGN KEY (criador_id) REFERENCES utilizadores(id)
+    equipa_id   INT            NULL,
+    regras      NVARCHAR(1000) NULL,
+    premio      NVARCHAR(500)  NULL,
+    created_at  DATETIME2      NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_liga_criador FOREIGN KEY (criador_id) REFERENCES utilizadores(id),
+    CONSTRAINT FK_liga_equipa  FOREIGN KEY (equipa_id)  REFERENCES equipas(id)
   );
   PRINT '✅ Tabela ligas criada.';
 END
-ELSE PRINT '⚠️  ligas já existia.';
+ELSE BEGIN
+  -- Adicionar colunas se a tabela já existir (upgrade seguro)
+  IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('ligas') AND name='equipa_id')
+    ALTER TABLE ligas ADD equipa_id INT NULL CONSTRAINT FK_liga_equipa FOREIGN KEY REFERENCES equipas(id);
+  IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('ligas') AND name='regras')
+    ALTER TABLE ligas ADD regras NVARCHAR(1000) NULL;
+  IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('ligas') AND name='premio')
+    ALTER TABLE ligas ADD premio NVARCHAR(500) NULL;
+  PRINT '⚠️  ligas já existia — colunas verificadas/adicionadas.';
+END
 GO
 
 -- ── 4. Tabela liga_membros ───────────────────────────────────

@@ -23,7 +23,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const [menuAberto, setMenuAberto] = useState(false);
-  const [dropdownAberto, setDropdownAberto] = useState(null); // 'jogos' | 'equipas' | 'user' | null
+  const [dropdownAberto, setDropdownAberto] = useState(null); // 'jogos' | 'equipas' | 'ligas' | 'user' | null
 
   const [minhaEquipa, setMinhaEquipa] = useState(null);
   const [temJogos, setTemJogos] = useState(false);
@@ -186,6 +186,30 @@ export default function Navbar() {
             )}
           </div>
 
+          {/* Dropdown Ligas */}
+          {isAuthenticated && (
+            <div className={`navbar-dropdown-wrap ${dropdownAberto === 'ligas' ? 'open' : ''}`}>
+              <button
+                type="button"
+                className={`navbar-link navbar-link-btn ${isActive('/ligas') ? 'active' : ''}`}
+                onClick={() => toggleDropdown('ligas')}
+                aria-expanded={dropdownAberto === 'ligas'}
+              >
+                <IconTrophy size="0.95rem" /> Ligas <span className="navbar-chevron-mini">▾</span>
+              </button>
+              {dropdownAberto === 'ligas' && (
+                <div className="navbar-menu">
+                  <Link to="/ligas" className="navbar-menu-item">
+                    <IconCrown size="0.95rem" /> As Minhas Ligas
+                  </Link>
+                  <Link to="/ligas?criar=1" className="navbar-menu-item highlight">
+                    <IconPlus size="0.95rem" /> Criar Liga
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
           <Link to="/campos" className={`navbar-link ${isActive('/campos') ? 'active' : ''}`}>
             <IconStadium size="0.95rem" /> Campos
           </Link>
@@ -289,6 +313,14 @@ export default function Navbar() {
           )}
           <Link to="/equipas" className="navbar-mobile-link sub">Procurar Equipa</Link>
           {isAuthenticated && <Link to="/equipas/criar" className="navbar-mobile-link sub">+ Criar Equipa</Link>}
+
+          {isAuthenticated && (
+            <>
+              <div className="navbar-mobile-section">Ligas</div>
+              <Link to="/ligas" className="navbar-mobile-link sub">As Minhas Ligas</Link>
+              <Link to="/ligas?criar=1" className="navbar-mobile-link sub">+ Criar Liga</Link>
+            </>
+          )}
 
           <Link to="/campos" className="navbar-mobile-link">Campos</Link>
           <Link to="/sobre" className="navbar-mobile-link">Sobre</Link>
