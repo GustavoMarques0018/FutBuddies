@@ -330,9 +330,129 @@ async function traduzir(req, res) {
   }
 }
 
+// GET /api/jogadores/:id/heatmap — presença por dia (52 semanas)
+async function heatmapPresencas(req, res) {
+  try {
+    const alvoId = parseInt(req.params.id);
+    const inicio = new Date();
+    inicio.setFullYear(inicio.getFullYear() - 1);
+    inicio.setHours(0, 0, 0, 0);
+
+    const r = await query(
+      `SELECT CAST(j.data_jogo AS DATE) AS dia, COUNT(*) AS jogos
+         FROM inscricoes i
+         JOIN jogos j ON j.id = i.jogo_id
+         WHERE i.utilizador_id = @uid
+           AND i.estado = 'confirmado'
+           AND j.data_jogo >= @inicio
+         GROUP BY CAST(j.data_jogo AS DATE)
+         ORDER BY dia`,
+      { uid: alvoId, inicio }
+    );
+    res.json({ sucesso: true, dias: r.recordset });
+  } catch (err) {
+    console.error('[Stats] heatmap:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+// GET /api/jogadores/:id/comparacao-media
+async function comparacaoMedia(req, res) {
+  try {
+    const alvoId = parseInt(req.params.id);
+
+    const [jogador, media] = await Promise.all([
+      query(
+        `SELECT total_jogos, total_golos, total_assistencias FROM utilizadores WHERE id=@uid`,
+        { uid: alvoId }
+      ),
+      query(
+        `SELECT AVG(CAST(total_jogos AS FLOAT))         AS media_jogos,
+                AVG(CAST(total_golos AS FLOAT))         AS media_golos,
+                AVG(CAST(total_assistencias AS FLOAT))  AS media_ass
+           FROM utilizadores WHERE ativo=1 AND total_jogos > 0`
+      ),
+    ]);
+
+    if (!jogador.recordset.length)
+      return res.status(404).json({ sucesso: false, mensagem: 'Jogador não encontrado.' });
+
+    const u = jogador.recordset[0];
+    const m = media.recordset[0];
+
+    const ratio = (val, med) => med > 0 ? parseFloat((val / med).toFixed(2)) : null;
+
+    res.json({
+      sucesso: true,
+      jogador: { jogos: u.total_jogos, golos: u.total_golos, assistencias: u.total_assistencias },
+      media:   { jogos: parseFloat((m.media_jogos||0).toFixed(1)), golos: parseFloat((m.media_golos||0).toFixed(1)), assistencias: parseFloat((m.media_ass||0).toFixed(1)) },
+      ratio:   { jogos: ratio(u.total_jogos, m.media_jogos), golos: ratio(u.total_golos, m.media_golos), assistencias: ratio(u.total_assistencias, m.media_ass) },
+    });
+  } catch (err) {
+    console.error('[Stats] comparacaoMedia:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
+// POST /api/cron/lembretes — chamado por cron externo (protegido por CRON_SECRET)
+async function enviarLembretes(req, res) {
+  try {
+    const secret = req.headers['x-cron-secret'];
+    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET)
+      return res.status(401).json({ sucesso: false, mensagem: 'Não autorizado.' });
+
+    const { WebPushController } = require('./webPushController');
+    const agora = new Date();
+    let enviados = 0;
+
+    // Para cada janela de lembrete (1h, 2h, 24h)
+    for (const horas of [1, 2, 24]) {
+      const inicio = new Date(agora.getTime() + horas * 60 * 60 * 1000 - 5 * 60 * 1000);
+      const fim    = new Date(agora.getTime() + horas * 60 * 60 * 1000 + 5 * 60 * 1000);
+
+      const inscritos = await query(
+        `SELECT i.utilizador_id, j.titulo, j.data_jogo, j.local, j.regiao, j.id AS jogo_id
+           FROM inscricoes i
+           JOIN jogos j ON j.id = i.jogo_id
+           JOIN utilizadores u ON u.id = i.utilizador_id
+           WHERE i.estado = 'confirmado'
+             AND j.estado = 'aberto'
+             AND j.data_jogo >= @inicio AND j.data_jogo <= @fim
+             AND u.lembrete_jogo_horas = @horas`,
+        { inicio, fim, horas }
+      );
+
+      for (const row of inscritos.recordset) {
+        try {
+          const subs = await query(
+            `SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE utilizador_id=@uid`,
+            { uid: row.utilizador_id }
+          );
+          for (const sub of subs.recordset) {
+            await require('web-push').sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              JSON.stringify({
+                title: `⚽ ${row.titulo} em ${horas}h!`,
+                body: `${row.local || row.regiao || ''} · Não te esqueças!`,
+                url: `/jogos/${row.jogo_id}`,
+              })
+            ).catch(() => {});
+            enviados++;
+          }
+        } catch {}
+      }
+    }
+
+    res.json({ sucesso: true, enviados });
+  } catch (err) {
+    console.error('[Lembretes] cron:', err);
+    res.status(500).json({ sucesso: false, mensagem: 'Erro interno.' });
+  }
+}
+
 module.exports = {
   analiseFoma, posicaoIdeal, headToHead,
   getStreak, recalcularStreak,
   previsaoDesistencias, historicoCampo,
-  traduzir,
+  traduzir, heatmapPresencas, comparacaoMedia, enviarLembretes,
 };

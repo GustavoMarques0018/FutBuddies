@@ -39,6 +39,7 @@ const Campos         = lazy(() => import('./pages/Campos'));
 const AvaliarCampo   = lazy(() => import('./pages/AvaliarCampo'));
 const Feed           = lazy(() => import('./pages/Feed'));
 const Desafios       = lazy(() => import('./pages/Desafios'));
+const Ligas          = lazy(() => import('./pages/Ligas'));
 
 function Loading() {
   return (
@@ -104,6 +105,7 @@ function AppRoutes() {
           <Route path="/suporte" element={<Suporte />} />
           <Route path="/feed" element={<RotaProtegida><Feed /></RotaProtegida>} />
           <Route path="/desafios" element={<RotaProtegida><Desafios /></RotaProtegida>} />
+          <Route path="/ligas" element={<RotaProtegida><Ligas /></RotaProtegida>} />
           <Route path="/admin" element={<RotaAdmin><Admin /></RotaAdmin>} />
           <Route path="*" element={<NaoEncontrado />} />
         </Routes>

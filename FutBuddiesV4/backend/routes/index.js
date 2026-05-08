@@ -242,13 +242,30 @@ router.post('/jogos/:jogoId/avaliar-piso', autenticar,         avalPisoCtrl.subm
 router.get('/campos/:id/avaliacoes-piso',  autenticarOpcional, avalPisoCtrl.listarPiso);
 
 // ── ESTATÍSTICAS AVANÇADAS ────────────────────────────────
-router.get('/jogadores/:id/forma',         autenticarOpcional, statsCtrl.analiseFoma);
-router.get('/jogadores/:id/posicao-ideal', autenticarOpcional, statsCtrl.posicaoIdeal);
-router.get('/jogadores/:id/h2h/:outroId',  autenticarOpcional, statsCtrl.headToHead);
-router.get('/jogadores/:id/streak',        autenticarOpcional, statsCtrl.getStreak);
-router.get('/jogos/:id/previsao-desistencias', autenticar,     statsCtrl.previsaoDesistencias);
-router.get('/campos/:id/historico',        autenticarOpcional, statsCtrl.historicoCampo);
-router.post('/traduzir',                   autenticar,         statsCtrl.traduzir);
+router.get('/jogadores/:id/forma',           autenticarOpcional, statsCtrl.analiseFoma);
+router.get('/jogadores/:id/posicao-ideal',   autenticarOpcional, statsCtrl.posicaoIdeal);
+router.get('/jogadores/:id/h2h/:outroId',    autenticarOpcional, statsCtrl.headToHead);
+router.get('/jogadores/:id/streak',          autenticarOpcional, statsCtrl.getStreak);
+router.get('/jogadores/:id/heatmap',         autenticarOpcional, statsCtrl.heatmapPresencas);
+router.get('/jogadores/:id/comparacao-media',autenticarOpcional, statsCtrl.comparacaoMedia);
+router.get('/jogos/:id/previsao-desistencias', autenticar,       statsCtrl.previsaoDesistencias);
+router.get('/campos/:id/historico',          autenticarOpcional, statsCtrl.historicoCampo);
+router.post('/traduzir',                     autenticar,         statsCtrl.traduzir);
+router.post('/cron/lembretes',                                   statsCtrl.enviarLembretes);
+
+// ── TROFÉUS DE ÉPOCA ──────────────────────────────────────
+const trofeuCtrl = require('../controllers/trofeuController');
+router.get('/jogadores/:id/trofeus',         autenticarOpcional, trofeuCtrl.getTrofeus);
+router.post('/admin/cron/trofeus',           autenticar, isAdmin, trofeuCtrl.cronTrofeus);
+
+// ── LIGAS ENTRE AMIGOS ────────────────────────────────────
+const ligasCtrl = require('../controllers/ligasController');
+router.get ('/ligas',              autenticar, ligasCtrl.listarMinhasLigas);
+router.post('/ligas',              autenticar, ligasCtrl.criarLiga);
+router.post('/ligas/entrar',       autenticar, ligasCtrl.entrarLiga);
+router.get ('/ligas/:id',          autenticar, ligasCtrl.obterLiga);
+router.post('/ligas/:id/jogos',    autenticar, ligasCtrl.adicionarJogo);
+router.delete('/ligas/:id',        autenticar, ligasCtrl.encerrarLiga);
 
 // ── UPLOAD ────────────────────────────────────────────────
 // Wraps multer so that its errors (file too large, wrong type) are returned as
