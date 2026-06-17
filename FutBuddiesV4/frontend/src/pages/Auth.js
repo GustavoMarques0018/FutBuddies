@@ -298,8 +298,8 @@ export function Registar() {
     if (form.password !== form.confirmar) {
       return setErro('As passwords não coincidem.');
     }
-    if (form.password.length < 6) {
-      return setErro('A password deve ter pelo menos 6 caracteres.');
+    if (form.password.length < 8) {
+      return setErro('A password deve ter pelo menos 8 caracteres.');
     }
 
     setLoading(true);
@@ -356,7 +356,7 @@ export function Registar() {
             <label>Password</label>
             <input
               type="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
               required

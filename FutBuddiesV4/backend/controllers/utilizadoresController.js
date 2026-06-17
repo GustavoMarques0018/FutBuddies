@@ -147,8 +147,8 @@ async function alterarPassword(req, res) {
 
     if (!passwordAtual || !novaPassword)
       return res.status(400).json({ sucesso: false, mensagem: 'Preenche todos os campos.' });
-    if (novaPassword.length < 6)
-      return res.status(400).json({ sucesso: false, mensagem: 'A nova password deve ter pelo menos 6 caracteres.' });
+    if (novaPassword.length < 8)
+      return res.status(400).json({ sucesso: false, mensagem: 'A nova password deve ter pelo menos 8 caracteres.' });
 
     const resultado = await query(
       'SELECT password_hash FROM utilizadores WHERE id = @id', { id: req.utilizador.id }

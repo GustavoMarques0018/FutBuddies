@@ -87,8 +87,8 @@ export default function Perfil() {
     e.preventDefault();
     if (passForm.novaPassword !== passForm.confirmar)
       return addToast('As passwords não coincidem.', 'error');
-    if (passForm.novaPassword.length < 6)
-      return addToast('A nova password deve ter pelo menos 6 caracteres.', 'error');
+    if (passForm.novaPassword.length < 8)
+      return addToast('A nova password deve ter pelo menos 8 caracteres.', 'error');
     try {
       await api.put('/utilizadores/password', { passwordAtual: passForm.passwordAtual, novaPassword: passForm.novaPassword });
       addToast('Password alterada com sucesso!', 'success');
@@ -541,7 +541,7 @@ export default function Perfil() {
                 <div className="grid-2">
                   <div className="form-field">
                     <label>Nova Password</label>
-                    <input type="password" placeholder="Mínimo 6 caracteres" value={passForm.novaPassword}
+                    <input type="password" placeholder="Mínimo 8 caracteres" value={passForm.novaPassword}
                       onChange={e => setPassForm({ ...passForm, novaPassword: e.target.value })} required />
                   </div>
                   <div className="form-field">

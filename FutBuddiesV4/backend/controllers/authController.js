@@ -41,8 +41,8 @@ async function registar(req, res) {
       return res.status(400).json({ sucesso: false, mensagem: 'Nome, email e password são obrigatórios.' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ sucesso: false, mensagem: 'A password deve ter pelo menos 6 caracteres.' });
+    if (password.length < 8) {
+      return res.status(400).json({ sucesso: false, mensagem: 'A password deve ter pelo menos 8 caracteres.' });
     }
 
     // Verificar se email já existe
