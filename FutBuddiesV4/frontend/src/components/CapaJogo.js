@@ -16,19 +16,20 @@ import './CapaJogo.css';
 
 const ACENTO = { '5x5': '#22c55e', '7x7': '#0ea5e9', '11x11': '#a855f7' };
 
-// Jogador em "line-art" numa pose de remate (vira-se p/ a bola ao centro)
+// Jogador em silhueta preenchida (membros grossos que se fundem num corpo
+// sólido) numa pose de remate, virado para a bola ao centro.
 function Jogador({ x, y, escala = 1, flip = false }) {
   const sx = flip ? -escala : escala;
   return (
     <g transform={`translate(${x},${y}) scale(${sx},${escala})`}
-       stroke="#ffffff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"
+       stroke="#ffffff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"
        fill="none">
-      <circle cx="0" cy="-30" r="6" fill="#ffffff" stroke="none" />
-      <path d="M0,-24 L-1,-3" />     {/* tronco */}
-      <path d="M0,-19 L-11,-10" />   {/* braço de trás */}
-      <path d="M0,-19 L12,-14" />    {/* braço da frente */}
-      <path d="M-1,-3 L-9,14" />     {/* perna de apoio */}
-      <path d="M-1,-3 L15,4" />      {/* perna de remate */}
+      <circle cx="0" cy="-32" r="7.5" fill="#ffffff" stroke="none" />
+      <path d="M0,-25 L-2,-2" />      {/* tronco */}
+      <path d="M-1,-19 L-13,-11" />   {/* braço de trás */}
+      <path d="M-1,-19 L13,-16" />    {/* braço da frente */}
+      <path d="M-2,-2 L-9,13" />      {/* perna de apoio */}
+      <path d="M-2,-2 L16,5" />       {/* perna de remate */}
     </g>
   );
 }
@@ -87,8 +88,8 @@ export default function CapaJogo({ jogo = {}, altura, className = '' }) {
         </g>
 
         {/* dois jogadores a disputar a bola ao centro */}
-        <Jogador x="150" y="96" escala={1.25} />
-        <Jogador x="250" y="96" escala={1.25} flip />
+        <Jogador x="150" y="94" escala={1.2} />
+        <Jogador x="250" y="94" escala={1.2} flip />
 
         {/* bola entre os dois */}
         <g transform="translate(200,101)">
