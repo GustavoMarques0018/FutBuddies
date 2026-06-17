@@ -2,7 +2,18 @@
    Equipas v6
    ============================================================ */
 
-.equipas-page { padding-bottom: 4rem; }
+.equipas-page { padding-bottom: 4rem; position: relative; min-height: 100vh; }
+/* Fundo decorativo: brilhos verdes da marca (leve, sem imagens) */
+.equipas-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 420px at 85% -8%, var(--primary-glow), transparent 62%),
+    radial-gradient(700px 460px at 0% 102%, var(--primary-soft), transparent 60%);
+}
 
 .equipas-header {
   display: flex;

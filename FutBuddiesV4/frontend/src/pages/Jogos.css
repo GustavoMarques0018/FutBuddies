@@ -190,11 +190,15 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(5,5,5,0.92) 0%, rgba(5,5,5,0.96) 60%, var(--bg) 100%);
+  background:
+    radial-gradient(700px 360px at 85% -5%, var(--primary-glow), transparent 65%),
+    linear-gradient(180deg, rgba(5,5,5,0.72) 0%, rgba(5,5,5,0.88) 65%, var(--bg) 100%);
   pointer-events: none;
 }
 [data-theme="light"] .jogos-page::before {
-  background: linear-gradient(180deg, rgba(246,247,245,0.88) 0%, rgba(246,247,245,0.94) 60%, var(--bg) 100%);
+  background:
+    radial-gradient(700px 360px at 85% -5%, var(--primary-glow), transparent 65%),
+    linear-gradient(180deg, rgba(246,247,245,0.70) 0%, rgba(246,247,245,0.90) 65%, var(--bg) 100%);
 }
 
 .jogo-card-top {

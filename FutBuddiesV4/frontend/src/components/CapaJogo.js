@@ -71,10 +71,9 @@ export default function CapaJogo({ jogo = {}, altura, className = '' }) {
           <rect key={i} x={i * 57} y="0" width="57" height="132" fill="#ffffff" opacity="0.05" />
         ))}
 
-        {/* marcações do campo (linha + meio-círculo) */}
-        <g stroke="#ffffff" strokeOpacity="0.25" fill="none" strokeWidth="2">
-          <line x1="0" y1="120" x2="400" y2="120" />
-          <ellipse cx="200" cy="130" rx="70" ry="22" />
+        {/* marcações do campo (meio-círculo) */}
+        <g stroke="#ffffff" strokeOpacity="0.22" fill="none" strokeWidth="2">
+          <ellipse cx="200" cy="128" rx="78" ry="22" />
         </g>
 
         {/* brilho de acento (varia com o tipo) */}
@@ -82,19 +81,19 @@ export default function CapaJogo({ jogo = {}, altura, className = '' }) {
 
         {/* sombras no chão (assentam os jogadores) */}
         <g fill="#000000" opacity="0.13">
-          <ellipse cx="152" cy="112" rx="22" ry="4.5" />
-          <ellipse cx="248" cy="112" rx="22" ry="4.5" />
-          <ellipse cx="200" cy="110" rx="11" ry="3" />
+          <ellipse cx="146" cy="107" rx="26" ry="5" />
+          <ellipse cx="254" cy="107" rx="26" ry="5" />
+          <ellipse cx="200" cy="106" rx="12" ry="3" />
         </g>
 
-        {/* dois jogadores a disputar a bola ao centro */}
-        <Jogador x="150" y="94" escala={1.2} />
-        <Jogador x="250" y="94" escala={1.2} flip />
+        {/* dois jogadores a disputar a bola ao centro (maiores, centrados) */}
+        <Jogador x="146" y="80" escala={1.5} />
+        <Jogador x="254" y="80" escala={1.5} flip />
 
         {/* bola entre os dois */}
-        <g transform="translate(200,101)">
-          <circle r="8" fill="#ffffff" />
-          <path d="M0,-5.5 L3.2,-1 L1.6,3.4 L-1.6,3.4 L-3.2,-1 Z" fill="#0f6b34" opacity="0.85" />
+        <g transform="translate(200,99)">
+          <circle r="9" fill="#ffffff" />
+          <path d="M0,-6 L3.5,-1 L1.8,3.8 L-1.8,3.8 L-3.5,-1 Z" fill="#0f6b34" opacity="0.85" />
         </g>
       </svg>
     </div>

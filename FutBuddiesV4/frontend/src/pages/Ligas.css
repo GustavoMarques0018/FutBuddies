@@ -1,4 +1,15 @@
-.ligas-page { padding-top: calc(var(--navbar-h) + env(safe-area-inset-top,0px) + 1.5rem); min-height: 100vh; }
+.ligas-page { padding-top: calc(var(--navbar-h) + env(safe-area-inset-top,0px) + 1.5rem); min-height: 100vh; position: relative; }
+/* Fundo decorativo: brilhos verdes da marca (leve, sem imagens) */
+.ligas-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 420px at 85% -8%, var(--primary-glow), transparent 62%),
+    radial-gradient(700px 460px at 0% 102%, var(--primary-soft), transparent 60%);
+}
 
 .liga-card {
   background: var(--bg-elev-1);
