@@ -23,39 +23,18 @@
   pointer-events: none;
 }
 
-/* Background video (loop, muted, autoplay) */
-.auth-bg-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  pointer-events: none;
-  filter: saturate(1.05) contrast(1.02);
-  /* Se o browser bloquear autoplay (iOS Low Power Mode), o poster mantém-se visível */
-  background: #000 center/cover no-repeat;
-}
-/* Em écrans muito pequenos, object-fit: cover com vídeos verticais pode ficar esticado.
-   Mantemos cover (é o que queremos), mas garantimos que o poster aparece mesmo
-   sem play (Safari iOS por vezes esconde o poster se o video falha silenciosamente). */
-@supports (-webkit-touch-callout: none) {
-  .auth-bg-video { background-size: cover; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-bg-video { display: none; }
-}
-/* Dark overlay on top of photo/video */
+/* Overlay sobre o fundo animado — mais leve no topo (deixa ver o céu/estrelas)
+   e mais denso em baixo (legibilidade do formulário sobre o relvado). */
 .auth-page::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(5,5,5,0.72), rgba(5,5,5,0.86));
+  background: linear-gradient(180deg, rgba(5,5,5,0.40), rgba(5,5,5,0.74));
   pointer-events: none;
 }
 [data-theme="light"] .auth-page::before {
-  background: linear-gradient(180deg, rgba(246,247,245,0.70), rgba(246,247,245,0.88));
+  background: linear-gradient(180deg, rgba(246,247,245,0.38), rgba(246,247,245,0.78));
 }
 /* Green glow accent (above overlay, still behind form) */
 .auth-page::after {

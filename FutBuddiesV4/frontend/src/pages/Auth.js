@@ -2,68 +2,11 @@
 //  FutBuddies - Páginas de Login e Registo
 // ============================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import FundoCampo from '../components/FundoCampo';
 import './Auth.css';
-
-// Photo backdrop — theme-aware. Dropped into /public.
-function AuthBgVideo() {
-  const { tema } = useTheme();
-  const ref = useRef(null);
-  // Vídeo em loop como fundo. A imagem serve como poster enquanto o vídeo carrega
-  // e como fallback se o browser bloquear autoplay (iOS Low Power Mode, etc.).
-  const cfg = tema === 'dark'
-    ? { video: 'auth-bg-dark.mp4',  poster: 'hero-night-2.jpg' }
-    : { video: 'auth-bg-light.mp4', poster: 'hero-day-2.jpg'   };
-
-  // iOS/Android Safari: garantir que muted é definido ANTES do play,
-  // e chamar play() explicitamente — o atributo autoPlay do React por vezes
-  // não é suficiente em mobile (especialmente depois de trocar a source).
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    v.muted = true;              // obrigatório para autoplay em mobile
-    v.setAttribute('muted', ''); // belt-and-suspenders para Safari
-    v.playsInline = true;
-    v.load();                    // re-carrega quando a source muda (tema)
-    const tentarPlay = () => {
-      const p = v.play();
-      if (p && typeof p.catch === 'function') p.catch(() => { /* bloqueado por Low Power — fica o poster */ });
-    };
-    tentarPlay();
-    // Alguns browsers móveis só permitem play depois do primeiro toque —
-    // tentamos novamente no primeiro gesto.
-    const retry = () => { tentarPlay(); document.removeEventListener('touchstart', retry); document.removeEventListener('click', retry); };
-    document.addEventListener('touchstart', retry, { once: true, passive: true });
-    document.addEventListener('click', retry, { once: true });
-    return () => {
-      document.removeEventListener('touchstart', retry);
-      document.removeEventListener('click', retry);
-    };
-  }, [cfg.video]);
-
-  return (
-    <video
-      ref={ref}
-      key={cfg.video}       /* força remount quando o tema muda */
-      className="auth-bg-video"
-      autoPlay
-      loop
-      muted
-      defaultMuted
-      playsInline
-      webkit-playsinline="true"
-      x5-playsinline="true"
-      preload="auto"
-      disableRemotePlayback
-      poster={`${process.env.PUBLIC_URL}/${cfg.poster}`}
-    >
-      <source src={`${process.env.PUBLIC_URL}/${cfg.video}`} type="video/mp4" />
-    </video>
-  );
-}
 
 // ── Login ────────────────────────────────────────────────────
 export function Login() {
@@ -159,7 +102,7 @@ export function Login() {
 
   return (
     <div className="auth-page">
-      <AuthBgVideo />
+      <FundoCampo />
       <div className="auth-container">
         <div className="auth-logo">
           <img src="/FbVerde.png" alt="FutBuddies" />
@@ -319,7 +262,7 @@ export function Registar() {
 
   return (
     <div className="auth-page">
-      <AuthBgVideo />
+      <FundoCampo />
       <div className="auth-container">
         <div className="auth-logo">
           <img src="/FbVerde.png" alt="FutBuddies" />
