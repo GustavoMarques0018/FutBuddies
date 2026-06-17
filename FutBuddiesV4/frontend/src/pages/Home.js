@@ -9,12 +9,14 @@ import { useTheme } from '../context/ThemeContext';
 import api from '../utils/api';
 import { NIVEL_COR, resolverImgUrl } from '../utils/constantes';
 import {
-  IconTrophy, IconGlobe, IconLock, IconMapPin, IconCalendar,
+  IconTrophy, IconGlobe, IconLock, IconMapPin,
   IconPencil, IconSearch, IconBall, IconChat, IconChart,
   IconClock, IconUsers,
 } from '../components/Icons';
 import AnimatedCounter from '../components/AnimatedCounter';
 import Reveal from '../components/Reveal';
+import CapaJogo from '../components/CapaJogo';
+import IlustracaoVazio from '../components/IlustracaoVazio';
 import './Home.css';
 
 export default function Home() {
@@ -102,7 +104,7 @@ export default function Home() {
                   <div className="hero-loading"><div className="spinner" /></div>
                 ) : jogos.length === 0 ? (
                   <div className="hero-empty">
-                    <span className="hero-empty-icon"><IconCalendar size="2rem" /></span>
+                    <span className="hero-empty-icon"><IlustracaoVazio variante="baliza" tamanho={120} /></span>
                     <p>Ainda não há jogos abertos.</p>
                     {isAuthenticated && (
                       <Link to="/jogos/criar" className="btn btn-primary btn-sm" style={{ marginTop: '0.75rem' }}>
@@ -116,6 +118,7 @@ export default function Home() {
                     const nc = NIVEL_COR[jogo.nivel] || NIVEL_COR['Descontraído'];
                     return (
                       <Link to={`/jogos/${jogo.id}`} key={jogo.id} className="hero-jogo-card">
+                        <CapaJogo jogo={jogo} />
                         <div className="hero-jogo-top">
                           <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                             <span className="hero-jogo-tipo">{jogo.tipo_jogo || '5x5'}</span>

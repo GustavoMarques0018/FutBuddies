@@ -94,7 +94,7 @@ export default function PWAInstallPrompt() {
           </div>
         </div>
 
-        <img src="/Image (6).jpg" alt="Exemplo de app instalada" className="pwa-showcase" />
+        <img src="/pwa-preview.jpg" alt="Exemplo de app instalada" className="pwa-showcase" />
 
         {isIOS ? (
           <>

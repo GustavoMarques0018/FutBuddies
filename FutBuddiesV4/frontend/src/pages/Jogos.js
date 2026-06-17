@@ -8,9 +8,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../utils/api';
 import { REGIOES, NIVEIS, NIVEL_COR, getRegiaoGuardada, guardarRegiao, resolverImgUrl } from '../utils/constantes';
-import { IconBall, IconLock, IconStadium, IconMapPin, IconClock } from '../components/Icons';
+import { IconLock, IconStadium, IconMapPin, IconClock } from '../components/Icons';
 import Countdown from '../components/Countdown';
 import QuadroHonra from '../components/QuadroHonra';
+import CapaJogo from '../components/CapaJogo';
+import IlustracaoVazio from '../components/IlustracaoVazio';
 import './Jogos.css';
 
 // Carregamento dinâmico do mapa (evita carregar Leaflet se nunca abrir)
@@ -71,6 +73,7 @@ function JogoCard({ jogo }) {
   const isPrivado = jogo.visibilidade === 'privado';
   return (
     <Link to={`/jogos/${jogo.id}`} className="jogo-card card card-clickable">
+      <CapaJogo jogo={jogo} />
       <div className="jogo-card-top">
         <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
           <span className="jogo-tipo">{jogo.tipo_jogo || '5x5'}</span>
@@ -364,7 +367,7 @@ export default function Jogos() {
           <div className="jogos-loading"><div className="spinner" /></div>
         ) : jogosOrdenados.length === 0 && jogosADecorrer.length === 0 ? (
           <div className="empty-state">
-            <div className="icon"><IconBall size="2rem" /></div>
+            <div className="icon" style={{ display: 'flex', justifyContent: 'center' }}><IlustracaoVazio variante="baliza" tamanho={140} /></div>
             <h3>Nenhum jogo encontrado</h3>
             <p>Tenta ajustar os filtros ou {regiao ? 'muda de regiao' : 'cria o primeiro jogo'}!</p>
             {isAuthenticated && <Link to="/jogos/criar" className="btn btn-primary" style={{ marginTop: '1rem' }}>+ Criar Jogo</Link>}
