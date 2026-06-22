@@ -348,7 +348,7 @@ export default function Perfil() {
                   </span>
                 </label>
                 {form.disponivelJogar && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
                     <div className="form-field" style={{ margin: 0 }}>
                       <label style={{ fontSize: '0.78rem' }}>Região disponível</label>
                       <select value={form.disponivelRegiao} onChange={e => setForm({ ...form, disponivelRegiao: e.target.value })}>
@@ -436,7 +436,7 @@ export default function Perfil() {
                         readOnly
                         value={link}
                         onFocus={(e) => e.target.select()}
-                        style={{ flex: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}
+                        style={{ flex: 1, minWidth: 0, fontFamily: 'monospace', fontSize: '0.85rem' }}
                       />
                       <button type="button" className="btn btn-primary" style={{ flexShrink: 0 }}
                         onClick={async () => {
