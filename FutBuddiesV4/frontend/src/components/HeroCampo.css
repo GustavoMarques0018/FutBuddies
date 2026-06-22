@@ -1,0 +1,37 @@
+/* ============================================================
+   HeroCampo — fundo animado da homepage
+   ============================================================ */
+.hero-bg-campo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-bg-campo svg { width: 100%; height: 100%; display: block; }
+
+/* holofotes a "respirar" */
+.hc-flicker { animation: hcFlicker 5s ease-in-out infinite alternate; }
+@keyframes hcFlicker { 0% { opacity: 0.5; } 100% { opacity: 0.9; } }
+
+/* estrelas a cintilar */
+.hc-twinkle { animation: hcTwinkle 3.2s ease-in-out infinite alternate; }
+@keyframes hcTwinkle { 0% { opacity: 0.15; } 100% { opacity: 0.9; } }
+
+/* partículas a subir do relvado */
+.hc-rise { opacity: 0; animation: hcRise linear infinite; }
+@keyframes hcRise {
+  0%   { transform: translateY(0);     opacity: 0; }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
+  100% { transform: translateY(-90px); opacity: 0; }
+}
+
+/* bola com leve flutuação */
+.hc-ball { animation: hcBall 4.5s ease-in-out infinite alternate; }
+@keyframes hcBall { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-flicker, .hc-twinkle, .hc-rise, .hc-ball { animation: none; }
+  .hc-rise { opacity: 0.4; }
+}

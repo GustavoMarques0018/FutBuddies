@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import HeroCampo from '../components/HeroCampo';
 import api from '../utils/api';
 import { NIVEL_COR, resolverImgUrl } from '../utils/constantes';
 import {
@@ -21,15 +21,9 @@ import './Home.css';
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  const { tema } = useTheme();
   const [jogos, setJogos] = useState([]);
   const [equipas, setEquipas] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Ajusta enquadramento para o jogador/equipa ficar visível (fotos verticais → fundo wide)
-  const heroPhoto = tema === 'dark'
-    ? { file: 'hero-night-1.jpg', position: 'center 65%' }  // equipa vermelha — um pouco abaixo do centro
-    : { file: 'hero-day-1.jpg',   position: 'center 55%' }; // equipa a celebrar — cêntrico-baixo
 
   useEffect(() => {
     Promise.all([
@@ -53,13 +47,7 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section className="hero">
-        <div
-          className="hero-bg-photo"
-          style={{
-            backgroundImage: `url(${process.env.PUBLIC_URL}/${heroPhoto.file})`,
-            backgroundPosition: heroPhoto.position,
-          }}
-        />
+        <HeroCampo />
         <div className="hero-bg-grid" />
         <div className="container">
           <div className="hero-content">

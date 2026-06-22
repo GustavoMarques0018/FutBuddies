@@ -27,11 +27,11 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(180deg, rgba(5,5,5,0.78) 0%, rgba(5,5,5,0.86) 55%, var(--bg) 100%);
+  background: linear-gradient(180deg, rgba(5,5,5,0.55) 0%, rgba(5,5,5,0.74) 55%, var(--bg) 100%);
   pointer-events: none;
 }
 [data-theme="light"] .hero::before {
-  background: linear-gradient(180deg, rgba(246,247,245,0.72) 0%, rgba(246,247,245,0.85) 55%, var(--bg) 100%);
+  background: linear-gradient(180deg, rgba(246,247,245,0.55) 0%, rgba(246,247,245,0.78) 55%, var(--bg) 100%);
 }
 
 .hero-bg-grid {
