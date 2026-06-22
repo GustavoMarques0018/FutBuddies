@@ -13,7 +13,6 @@ import Emblema from '../components/Emblema';
 import HistoricoPerfil from '../components/HistoricoPerfil';
 import Conquistas from '../components/Conquistas';
 import NivelCard from '../components/NivelCard';
-import Carteira from '../components/Carteira';
 import PushToggle from '../components/PushToggle';
 import './Perfil.css';
 
@@ -181,7 +180,7 @@ export default function Perfil() {
 
         {/* Abas */}
         <div style={{ display: 'flex', gap: '0.25rem', borderBottom: '2px solid var(--border)', marginBottom: '1.5rem' }}>
-          {[['perfil','👤 Perfil'], ['historico','📊 Histórico'], ['conquistas','🏅 Conquistas'], ['carteira','💰 Carteira'], ['conta','⚙️ Conta']].map(([id, label]) => (
+          {[['perfil','👤 Perfil'], ['historico','📊 Histórico'], ['conquistas','🏅 Conquistas'], ['conta','⚙️ Conta']].map(([id, label]) => (
             <button key={id} onClick={() => setAbaAtiva(id)}
               style={{ padding: '0.625rem 1.25rem', fontSize: '0.875rem', fontWeight: 600, background: 'transparent', border: 'none',
                 borderBottom: `2px solid ${abaAtiva === id ? 'var(--primary)' : 'transparent'}`, marginBottom: -2,
@@ -404,12 +403,6 @@ export default function Perfil() {
         {abaAtiva === 'conquistas' && (
           <div className="card" style={{ padding: '1.5rem' }}>
             <Conquistas />
-          </div>
-        )}
-
-        {abaAtiva === 'carteira' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <Carteira />
           </div>
         )}
 
