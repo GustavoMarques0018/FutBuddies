@@ -1,10 +1,11 @@
 // ============================================================
 //  FutBuddies - Suporte / Contacto
 // ============================================================
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import api from '../utils/api';
 import { useToast } from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
+import SuporteBot from '../components/SuporteBot';
 import './Suporte.css';
 
 const EMAIL = 'support.futbuddies@gmail.com';
@@ -35,7 +36,13 @@ const FAQS = [
 export default function Suporte() {
   const { isAuthenticated, utilizador } = useAuth();
   const { addToast } = useToast();
+  const formRef = useRef(null);
   const [openIdx, setOpenIdx] = useState(null);
+
+  const irParaFormulario = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => formRef.current?.querySelector('input, textarea')?.focus(), 500);
+  };
   const [copiado, setCopiado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [enviada, setEnviada] = useState(false);
@@ -80,8 +87,13 @@ export default function Suporte() {
       <div className="container">
         <header className="suporte-header">
           <h1>💬 Suporte</h1>
-          <p>Estamos aqui para ajudar. Vê as perguntas frequentes ou envia-nos uma mensagem.</p>
+          <p>Estamos aqui para ajudar. Fala com o assistente, vê as perguntas frequentes ou envia-nos uma mensagem.</p>
         </header>
+
+        {/* Assistente (FAQ bot) */}
+        <section className="suporte-card">
+          <SuporteBot onContactarHumano={irParaFormulario} />
+        </section>
 
         {/* Card de contacto */}
         <section className="suporte-card suporte-contacto">
@@ -100,7 +112,7 @@ export default function Suporte() {
         </section>
 
         {/* Formulário rápido */}
-        <section className="suporte-card">
+        <section className="suporte-card" ref={formRef}>
           <h2>Enviar mensagem rápida</h2>
           <p className="tiny">
             A mensagem chega diretamente à equipa de suporte do FutBuddies no painel de administração.
