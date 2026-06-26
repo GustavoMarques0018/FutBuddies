@@ -37,6 +37,24 @@
   filter: drop-shadow(0 0 4px var(--primary-glow));
 }
 
+/* ── Input NATIVO (telemóvel) ─────────────────────────────── */
+.fbdp-native {
+  display: block;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 0.95rem;
+  color: var(--text);
+  color-scheme: dark;            /* picker nativo em modo escuro */
+}
+[data-theme="light"] .fbdp-native { color-scheme: light; }
+.fbdp-native.fbdp-trigger-empty { color: var(--text-muted); }
+.fbdp-native::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  /* tom esverdeado para combinar com a marca */
+  filter: invert(58%) sepia(82%) saturate(560%) hue-rotate(78deg) brightness(105%);
+}
+
 /* ── Portal raiz (gerado pela lib em <body>) ─────────────── */
 .react-datepicker__portal {
   position: fixed !important;

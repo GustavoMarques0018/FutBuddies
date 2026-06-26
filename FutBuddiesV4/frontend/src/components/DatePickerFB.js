@@ -4,13 +4,25 @@
 //  Substitui inputs nativos type="date" / "datetime-local" / "time".
 // ============================================================
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { pt } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import './DatePickerFB.css';
 
 registerLocale('pt', pt);
+
+// Deteta ecrã pequeno (telemóvel) para usar o seletor nativo
+function useIsMobile(query = '(max-width: 640px)') {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const h = (e) => setM(e.matches);
+    mq.addEventListener ? mq.addEventListener('change', h) : mq.addListener(h);
+    return () => (mq.removeEventListener ? mq.removeEventListener('change', h) : mq.removeListener(h));
+  }, [query]);
+  return m;
+}
 
 // Botão custom para abrir o picker (matches input style)
 const TriggerInput = forwardRef(({ value, onClick, placeholder, disabled, className }, ref) => (
@@ -48,6 +60,7 @@ export default function DatePickerFB({
   disabled,
   className,
 }) {
+  const isMobile = useIsMobile();
   const parsed = parseValue(value, mode);
   const minDate = min ? parseValue(min, mode) : undefined;
   const maxDate = max ? parseValue(max, mode) : undefined;
@@ -59,6 +72,23 @@ export default function DatePickerFB({
 
   const showTime = mode !== 'date';
   const showOnlyTime = mode === 'time';
+
+  // Em ecrãs pequenos usa o seletor NATIVO do telemóvel (UX perfeita do iOS/Android)
+  if (isMobile) {
+    const nativeType = mode === 'date' ? 'date' : (mode === 'time' ? 'time' : 'datetime-local');
+    const toStr = (x) => (x == null ? undefined : (x instanceof Date ? formatValue(x, mode) : x));
+    return (
+      <input
+        type={nativeType}
+        className={`fbdp-trigger fbdp-native ${className || ''} ${!value ? 'fbdp-trigger-empty' : ''}`}
+        value={value instanceof Date ? formatValue(value, mode) : (value || '')}
+        min={toStr(min)}
+        max={toStr(max)}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
+  }
 
   return (
     <DatePicker
