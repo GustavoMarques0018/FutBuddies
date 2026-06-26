@@ -61,7 +61,7 @@ A aplicação inclui também um ecossistema completo: **equipas**, **ligas entre
 - **PWA** instalável no telemóvel, com notificações **Web Push**.
 - **Modo claro/escuro** e design totalmente responsivo (mobile-first).
 - Painel de **administração** (utilizadores, jogos, equipas, denúncias, candidaturas, suporte).
-- Resumo de chat por **IA** (Anthropic Claude) — opcional.
+- Resumo de chat por **IA** — opcional.
 
 ---
 
@@ -74,7 +74,7 @@ A aplicação inclui também um ecossistema completo: **equipas**, **ligas entre
 | **Base de dados** | SQL Server / Azure SQL (driver `mssql`, *queries* parametrizadas) |
 | **Pagamentos** | Stripe Connect |
 | **Tempo real** | Socket.IO (chat de jogos, equipas e mensagens privadas) |
-| **Serviços externos** | Cloudinary (uploads), Web Push (VAPID), Nominatim/OpenStreetMap (geocodificação), GIPHY, Anthropic (IA) |
+| **Serviços externos** | Cloudinary (uploads), Web Push (VAPID), Nominatim/OpenStreetMap (geocodificação), GIPHY |
 
 > ℹ️ O frontend usa **Create React App** (`react-scripts`), não Vite.
 
